@@ -1,0 +1,2293 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="meta-title">ChatToDoc - Convert AI Responses into Clean Word, PDF & Excel</title>
+  <meta id="meta-desc" name="description" content="Transform raw responses from ChatGPT, Claude, Gemini, and DeepSeek into beautifully formatted Word, PDF, and Excel documents without broken markdown." />
+  <meta property="og:title" content="ChatToDoc - Convert AI to Word, PDF & Excel" />
+  <meta property="og:description" content="No more asterisks **, hashtags ### and broken tables. Download perfectly styled documents in 1 click." />
+
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Dark mode initializer before paint to prevent flicker -->
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('chattodoc-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    })();
+  </script>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              purple: '#8B5CF6',
+              coral: '#F43F5E',
+              teal: '#06B6D4',
+              emerald: '#10B981',
+              amber: '#F59E0B',
+              blue: '#3B82F6',
+            }
+          },
+          animation: {
+            'float-slow': 'float 8s ease-in-out infinite',
+            'float-reverse': 'float-reverse 10s ease-in-out infinite',
+            'pulse-soft': 'pulse-soft 4s ease-in-out infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+              '50%': { transform: 'translate(30px, -20px) scale(1.08)' },
+            },
+            'float-reverse': {
+              '0%, 100%': { transform: 'translate(0px, 0px) scale(1)' },
+              '50%': { transform: 'translate(-30px, 20px) scale(0.95)' },
+            },
+            'pulse-soft': {
+              '0%, 100%': { opacity: '0.2' },
+              '50%': { opacity: '0.35' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Print Styles: Pure A4 document output (no buttons, no header, no UI) */
+    @media print {
+      .no-print,
+      header,
+      footer,
+      nav,
+      #hero-section,
+      #toolbar-container,
+      #input-column,
+      #export-section,
+      #features-section,
+      #how-section,
+      #faq-section,
+      #toast-notification,
+      .preview-control-strip,
+      #aurora-bg,
+      [aria-hidden="true"],
+      .fixed {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      html, body {
+        background: #ffffff !important;
+        color: #0f172a !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      #workspace, main {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+      }
+
+      #workspace > div {
+        display: block !important;
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+      }
+
+      #preview-column {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        overflow: visible !important;
+      }
+
+      #preview-column .overflow-y-auto {
+        overflow: visible !important;
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      #a4-page-sheet {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: #ffffff !important;
+        transform: none !important;
+      }
+
+      #document-sheet-footer {
+        display: flex !important;
+        margin-top: 15mm !important;
+        padding-top: 4mm !important;
+        border-top: 1px solid #cbd5e1 !important;
+      }
+
+      h1, h2, h3 {
+        break-after: avoid !important;
+        page-break-after: avoid !important;
+      }
+
+      table, tr, .quote-box, .math-box {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      p {
+        orphans: 3;
+        widows: 3;
+      }
+
+      @page {
+        size: A4 portrait;
+        margin: 20mm 18mm 20mm 18mm;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(240, 235, 255, 0.5);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 246, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(139, 92, 246, 0.45);
+    }
+  </style>
+</head>
+
+<body class="bg-[#FAF8FF] dark:bg-[#0B0914] text-slate-800 dark:text-slate-100 font-sans antialiased selection:bg-purple-200 dark:selection:bg-purple-900 selection:text-purple-900 dark:selection:text-purple-100 min-h-screen relative overflow-x-hidden transition-colors duration-300">
+
+  <!-- ============================================================== -->
+  <!-- 1. AURORA BACKGROUND                                           -->
+  <!-- ============================================================== -->
+  <div id="aurora-bg" class="no-print fixed inset-0 pointer-events-none overflow-hidden -z-10" aria-hidden="true">
+    <div class="absolute -top-32 -left-32 w-[520px] h-[520px] rounded-full bg-[#8B5CF6] opacity-25 dark:opacity-35 blur-3xl animate-float-slow"></div>
+    <div class="absolute top-48 -right-24 w-[480px] h-[480px] rounded-full bg-[#06B6D4] opacity-20 dark:opacity-30 blur-3xl animate-float-reverse"></div>
+    <div class="absolute top-[850px] left-1/4 w-[560px] h-[560px] rounded-full bg-[#F43F5E] opacity-20 dark:opacity-25 blur-3xl animate-pulse-soft"></div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- HEADER & NAVIGATION                                            -->
+  <!-- ============================================================== -->
+  <header class="no-print sticky top-0 z-40 bg-white/85 dark:bg-slate-950/85 backdrop-blur-md border-b border-purple-100/80 dark:border-purple-900/50 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
+      
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-3 group shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-purple-500/25 group-hover:scale-105 group-hover:shadow-purple-500/40 transition-all duration-300">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <path d="m10 13-2 2 2 2"/>
+            <path d="m14 17 2-2-2-2"/>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-purple-950 to-indigo-900 dark:from-white dark:via-purple-200 dark:to-indigo-300 bg-clip-text text-transparent">
+            Chat<span class="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">ToDoc</span>
+          </span>
+          <span id="nav-brand-sub" class="text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-widest hidden sm:inline">AI to Word, PDF & Excel</span>
+        </div>
+      </a>
+
+      <!-- Quick Nav Links -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300">
+        <a href="#workspace" id="nav-tool" class="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">The Tool</a>
+        <a href="#how-section" id="nav-how" class="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">How It Works</a>
+        <a href="#features-section" id="nav-features" class="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">Benefits</a>
+        <a href="#faq-section" id="nav-faq" class="hover:text-purple-600 dark:hover:text-purple-400 transition-colors">FAQ</a>
+      </nav>
+
+      <!-- Right Header Actions: Languages, Dark Mode, Badge -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- Language Switcher (EN default, FR, ES) -->
+        <div class="flex items-center bg-slate-100 dark:bg-slate-900 p-0.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-bold shadow-xs">
+          <button 
+            onclick="setLanguage('en')" 
+            id="lang-btn-en"
+            class="px-2.5 py-1 rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 shadow-xs"
+            title="Switch to English"
+          >
+            🇬🇧 EN
+          </button>
+          <button 
+            onclick="setLanguage('fr')" 
+            id="lang-btn-fr"
+            class="px-2.5 py-1 rounded-lg transition-all cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+            title="Passer en Français"
+          >
+            🇫🇷 FR
+          </button>
+          <button 
+            onclick="setLanguage('es')" 
+            id="lang-btn-es"
+            class="px-2.5 py-1 rounded-lg transition-all cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+            title="Cambiar a Español"
+          >
+            🇪🇸 ES
+          </button>
+        </div>
+
+        <!-- Dark / Light Mode Toggle Button -->
+        <button 
+          onclick="toggleDarkMode()" 
+          id="theme-toggle-btn"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-slate-900 hover:bg-purple-100 dark:hover:bg-slate-800 border border-purple-200/60 dark:border-purple-900/60 text-purple-700 dark:text-purple-300 font-semibold text-xs shadow-xs transition-all cursor-pointer"
+          title="Toggle dark mode"
+        >
+          <span id="theme-toggle-icon">🌙</span>
+          <span id="theme-toggle-text" class="hidden sm:inline">Dark Mode</span>
+        </button>
+
+        <!-- Badge -->
+        <div class="hidden lg:flex items-center gap-1 px-3 py-1 rounded-full bg-amber-400/20 dark:bg-amber-400/10 border border-amber-400/40 text-amber-900 dark:text-amber-300 text-xs font-bold tracking-wide shadow-xs animate-pulse-soft">
+          <span>⚡</span>
+          <span id="header-free-badge">100% Free & Instant</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================== -->
+  <!-- HERO SECTION                                                   -->
+  <!-- ============================================================== -->
+  <section id="hero-section" class="no-print pt-8 pb-6 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center">
+    
+    <!-- AI Brand Pills -->
+    <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 mb-5">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 shadow-2xs hover:scale-105 transition-transform">
+        <span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+        ChatGPT
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800 shadow-2xs hover:scale-105 transition-transform">
+        <span class="w-2 h-2 rounded-full bg-[#F97316]"></span>
+        Claude
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-2xs hover:scale-105 transition-transform">
+        <span class="w-2 h-2 rounded-full bg-[#3B82F6]"></span>
+        Gemini
+      </span>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 shadow-2xs hover:scale-105 transition-transform">
+        <span class="w-2 h-2 rounded-full bg-[#8B5CF6]"></span>
+        DeepSeek
+      </span>
+    </div>
+
+    <!-- Main Title -->
+    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.15] mb-4">
+      <span id="hero-title-1">Transform AI Responses into</span><br class="hidden sm:inline">
+      <span id="hero-title-2" class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+        Clean & Flawless Documents
+      </span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p id="hero-subtitle" class="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed mb-6 font-medium">
+      No more asterisks <code class="bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-200 px-1.5 py-0.5 rounded font-mono text-sm font-semibold">**</code>, 
+      hashtags <code class="bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-200 px-1.5 py-0.5 rounded font-mono text-sm font-semibold">###</code> 
+      and broken tables. Paste your raw response and download in 1 click a Word, PDF, or Excel file ready for your boss or professor.
+    </p>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- BARRE D'OUTILS (TOOLBAR) FLOTTANTE & COLORÉE                  -->
+  <!-- ============================================================== -->
+  <section id="toolbar-container" class="no-print max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
+    <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-purple-200/90 dark:border-purple-900/60 rounded-2xl p-3.5 sm:p-4 shadow-xl shadow-purple-500/5 dark:shadow-purple-950/20 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Interactive Toggles -->
+      <div class="flex flex-wrap items-center gap-3 sm:gap-5 text-xs font-semibold text-slate-700 dark:text-slate-200">
+        
+        <!-- Toggle 1: Clean Intro/Outro -->
+        <label class="flex items-center gap-2 cursor-pointer select-none group">
+          <input type="checkbox" id="toggle-clean-chatter" checked class="sr-only peer" onchange="processText()">
+          <div class="w-9 h-5 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 transition-colors shadow-inner relative"></div>
+          <span class="group-hover:text-slate-900 dark:group-hover:text-white transition-colors flex items-center gap-1">
+            <span>🧹</span> <span id="toggle-clean-chatter-label">Clean AI intro/outro</span>
+          </span>
+        </label>
+
+        <!-- Toggle 2: Fix Markdown & Tables -->
+        <label class="flex items-center gap-2 cursor-pointer select-none group">
+          <input type="checkbox" id="toggle-fix-markdown" checked class="sr-only peer" onchange="processText()">
+          <div class="w-9 h-5 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600 transition-colors shadow-inner relative"></div>
+          <span class="group-hover:text-slate-900 dark:group-hover:text-white transition-colors flex items-center gap-1">
+            <span>✨</span> <span id="toggle-fix-markdown-label">Fix tables & symbols</span>
+          </span>
+        </label>
+
+        <!-- Toggle 3: Strip Emojis -->
+        <label class="flex items-center gap-2 cursor-pointer select-none group">
+          <input type="checkbox" id="toggle-strip-emojis" class="sr-only peer" onchange="processText()">
+          <div class="w-9 h-5 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-500 transition-colors shadow-inner relative"></div>
+          <span class="group-hover:text-slate-900 dark:group-hover:text-white transition-colors flex items-center gap-1">
+            <span>🚫</span> <span id="toggle-strip-emojis-label">Remove emojis</span>
+          </span>
+        </label>
+
+        <!-- Toggle 4: Humanize Text (Bypass AI Detection) -->
+        <label class="flex items-center gap-2 cursor-pointer select-none group">
+          <input type="checkbox" id="humanizeToggle" class="sr-only peer" onchange="processText()">
+          <div class="w-9 h-5 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 transition-colors shadow-inner relative"></div>
+          <span class="group-hover:text-slate-900 dark:group-hover:text-white transition-colors flex items-center gap-1">
+            <span id="humanize-toggle-label">🕵️ Humanize Text (Bypass AI Detection)</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Theme Color Selector -->
+      <div class="flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
+        <span id="style-select-label" class="text-slate-500 dark:text-slate-400 text-[11px] uppercase tracking-wider font-semibold">Style:</span>
+        <select id="doc-theme-select" onchange="changeDocumentTheme(this.value)" class="text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer">
+          <option value="blue" id="theme-opt-blue">Royal Blue (Pro / Corporate)</option>
+          <option value="emerald" id="theme-opt-emerald">Emerald Green (Finance & Audit)</option>
+          <option value="purple" id="theme-opt-purple">Royal Purple (Creative / Tech)</option>
+          <option value="coral" id="theme-opt-coral">Warm Coral (Editorial)</option>
+          <option value="mono" id="theme-opt-mono">Minimalist Monochrome</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- 2. ESPACE DE TRAVAIL (SPLIT-SCREEN CONTRASTÉ)                 -->
+  <!-- ============================================================== -->
+  <main id="workspace" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+      
+      <!-- ======================================================== -->
+      <!-- COLONNE DE GAUCHE : Zone de saisie brute                 -->
+      <!-- ======================================================== -->
+      <div id="input-column" class="no-print lg:col-span-6 flex flex-col bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl border border-purple-200 dark:border-purple-900/50 shadow-xl shadow-purple-900/5 dark:shadow-purple-950/20 overflow-hidden transition-all duration-300 hover:border-purple-300 dark:hover:border-purple-700">
+        
+        <!-- En-tête avec bandeau dégradé -->
+        <div class="px-5 py-3.5 bg-gradient-to-r from-indigo-50/90 dark:from-indigo-950/50 via-purple-50/70 dark:via-purple-950/40 to-pink-50/50 dark:to-pink-950/30 border-b border-purple-100 dark:border-purple-900/50 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <span class="flex h-3 w-3 relative">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-purple-600"></span>
+            </span>
+            <span id="input-column-title" class="font-bold text-sm text-slate-800 dark:text-slate-100">Raw AI Output</span>
+          </div>
+
+          <!-- Badges colorés Mots & Caractères -->
+          <div class="flex items-center gap-2 text-xs font-semibold">
+            <span id="badge-word-count" class="px-2.5 py-1 rounded-full bg-indigo-100/80 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+              0 words
+            </span>
+            <span id="badge-char-count" class="hidden sm:inline-block px-2.5 py-1 rounded-full bg-purple-100/80 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+              0 chars
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Action Sub-bar -->
+        <div class="px-4 py-2 bg-slate-50/80 dark:bg-slate-950/60 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
+          <div class="flex items-center gap-2">
+            <span id="quick-presets-label" class="text-slate-400 dark:text-slate-500 text-[11px]">Quick presets:</span>
+            <button onclick="loadExamplePreset('report')" id="preset-btn-report" class="hover:text-purple-700 dark:hover:text-purple-300 underline decoration-dotted cursor-pointer">Report</button>
+            <span class="text-slate-300 dark:text-slate-700">·</span>
+            <button onclick="loadExamplePreset('academic')" id="preset-btn-academic" class="hover:text-purple-700 dark:hover:text-purple-300 underline decoration-dotted cursor-pointer">Course</button>
+            <span class="text-slate-300 dark:text-slate-700">·</span>
+            <button onclick="loadExamplePreset('invoice')" id="preset-btn-invoice" class="hover:text-purple-700 dark:hover:text-purple-300 underline decoration-dotted cursor-pointer">Quote</button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="pasteFromClipboard()" class="flex items-center gap-1 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer">
+              <span>📋</span> <span id="paste-btn-text">Paste</span>
+            </button>
+            <span class="text-slate-300 dark:text-slate-700">|</span>
+            <button onclick="clearText()" class="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 cursor-pointer flex items-center gap-1">
+              <span>🗑️</span> <span id="clear-btn-text">Clear</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Textarea (Démarre 100% vide) -->
+        <div class="flex-1 p-4 relative flex flex-col min-h-[380px] sm:min-h-[460px]">
+          <textarea 
+            id="raw-ai-input" 
+            oninput="processText()"
+            onkeyup="processText()"
+            onchange="processText()"
+            onpaste="setTimeout(processText, 30)"
+            placeholder="Paste your raw response from ChatGPT, Claude, Gemini, or DeepSeek here...
+
+What ChatToDoc cleans automatically:
+- Asterisks ** and ### headers
+- Chatty intros like 'Sure! Here is your document:'
+- Markdown tables | col 1 | col 2 |
+- Scientific formulas and calculations
+- Bullet lists and quotes"
+            class="w-full flex-1 p-4 rounded-xl font-mono text-xs sm:text-sm text-slate-800 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:border-purple-500 dark:focus:border-purple-400 focus:ring-4 focus:ring-purple-200/60 dark:focus:ring-purple-900/40 transition-all duration-200 resize-none leading-relaxed"
+            spellcheck="false"
+          ></textarea>
+        </div>
+
+        <!-- Footer notice -->
+        <div class="px-4 py-2 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end text-[11px] text-slate-500 dark:text-slate-400">
+          <span id="detected-features" class="font-semibold text-purple-600 dark:text-purple-400">Waiting for text...</span>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- COLONNE DE DROITE : Vraie Feuille A4 Blanche Pure        -->
+      <!-- ======================================================== -->
+      <div id="preview-column" class="lg:col-span-6 flex flex-col bg-slate-100/90 dark:bg-slate-950/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 p-4 sm:p-6 shadow-inner relative overflow-hidden">
+        
+        <!-- Preview Control Strip -->
+        <div class="no-print preview-control-strip mb-4 flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-300">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="preview-strip-title" class="font-bold text-slate-800 dark:text-slate-100">Live Preview (Pure A4 Sheet)</span>
+          </div>
+
+          <!-- Controls: Quick Print & Zoom -->
+          <div class="flex items-center gap-2">
+            <button 
+              onclick="exportPdf()" 
+              class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] shadow-xs cursor-pointer transition-all hover:scale-105 active:scale-95"
+              title="Print or Save as PDF"
+            >
+              <span>🖨️</span>
+              <span id="preview-print-label">Print / PDF</span>
+            </button>
+            <div class="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5 shadow-2xs">
+              <button onclick="setZoom(0.85)" class="px-2 py-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-[11px]">85%</button>
+              <button onclick="setZoom(1.0)" class="px-2 py-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-[11px] font-bold text-purple-600 dark:text-purple-400">100%</button>
+              <button onclick="setZoom(1.15)" class="px-2 py-0.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-[11px]">115%</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scrollable Viewport with Pure White A4 Page -->
+        <div class="flex-1 overflow-y-auto max-h-[640px] flex justify-center py-2 px-1">
+          
+          <!-- Pure White A4 Paper Sheet -->
+          <div 
+            id="a4-page-sheet" 
+            class="w-full max-w-[210mm] min-h-[297mm] bg-white text-slate-900 p-8 sm:p-12 rounded-xl shadow-2xl shadow-slate-400/20 dark:shadow-black/50 border border-slate-200 transition-all duration-300 relative flex flex-col justify-between"
+            style="font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;"
+          >
+            <!-- Document Body -->
+            <div id="document-rendered-body" class="prose max-w-none text-slate-800 text-sm leading-relaxed">
+              <!-- Content rendered dynamically via JS -->
+            </div>
+
+            <!-- Discrete Document Sheet Footer -->
+            <div id="document-sheet-footer" class="mt-12 pt-4 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-400">
+              <span id="doc-footer-mention">Document formatted with ChatToDoc</span>
+              <span id="doc-page-counter">Page 1 / 1</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- 3. BARRE D'EXPORTATION (4 BOUTONS COLORÉS)                     -->
+  <!-- ============================================================== -->
+  <section id="export-section" class="no-print max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+    <div class="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-purple-200/90 dark:border-purple-900/50 rounded-2xl p-6 sm:p-8 shadow-xl shadow-purple-900/5 dark:shadow-purple-950/20">
+      
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 id="export-section-title" class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <span>🚀</span> 1-Click Download in Your Desired Format
+          </h2>
+          <p id="export-section-subtitle" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Native formatting preserved for Google Docs, Microsoft Word, LibreOffice, and Excel.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 text-xs font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/60 px-3 py-1.5 rounded-full border border-purple-200/60 dark:border-purple-800">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+          <span id="export-ready-text">Ready for download</span>
+        </div>
+      </div>
+
+      <!-- 4 High-Impact Color-Coded Export Buttons -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Button 1: WORD (.doc) -->
+        <button 
+          onclick="exportWordDoc()"
+          class="group relative flex flex-col items-center justify-center p-4 rounded-xl font-bold text-white bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer overflow-hidden text-center"
+        >
+          <div class="absolute inset-0 bg-white/15 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+          <svg class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <path d="M9 12l2 6 2-6 2 6"/>
+          </svg>
+          <span id="btn-word-title" class="text-sm font-extrabold tracking-wide">Download Word</span>
+          <span id="btn-word-sub" class="text-[11px] opacity-80 font-medium mt-0.5">Clean .doc / .docx format</span>
+        </button>
+
+        <!-- Button 2: PDF (.pdf via Print) -->
+        <button 
+          onclick="exportPdf()"
+          class="group relative flex flex-col items-center justify-center p-4 rounded-xl font-bold text-white bg-gradient-to-br from-rose-500 via-red-600 to-rose-600 shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer overflow-hidden text-center"
+        >
+          <div class="absolute inset-0 bg-white/15 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+          <svg class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          <span id="btn-pdf-title" class="text-sm font-extrabold tracking-wide">Download / Print PDF</span>
+          <span id="btn-pdf-sub" class="text-[11px] opacity-80 font-medium mt-0.5">High-definition A4 page</span>
+        </button>
+
+        <!-- Button 3: EXCEL (.xls) -->
+        <button 
+          onclick="exportExcelSheet()"
+          class="group relative flex flex-col items-center justify-center p-4 rounded-xl font-bold text-white bg-gradient-to-br from-emerald-500 via-teal-600 to-emerald-600 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer overflow-hidden text-center"
+        >
+          <div class="absolute inset-0 bg-white/15 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+          <svg class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="3" y1="15" x2="21" y2="15"/>
+            <line x1="9" y1="3" x2="9" y2="21"/>
+            <line x1="15" y1="3" x2="15" y2="21"/>
+          </svg>
+          <span id="btn-excel-title" class="text-sm font-extrabold tracking-wide">Export to Excel</span>
+          <span id="btn-excel-sub" class="text-[11px] opacity-80 font-medium mt-0.5">Tables in .xls format</span>
+        </button>
+
+        <!-- Button 4: COPIER POUR GMAIL / DOCS -->
+        <button 
+          onclick="copyRichFormattedText()"
+          class="group relative flex flex-col items-center justify-center p-4 rounded-xl font-bold text-white bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 cursor-pointer overflow-hidden text-center"
+        >
+          <div class="absolute inset-0 bg-white/15 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+          <svg class="w-8 h-8 mb-2 group-hover:scale-110 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span id="btn-copy-title" class="text-sm font-extrabold tracking-wide">Copy for Gmail / Docs</span>
+          <span id="btn-copy-sub" class="text-[11px] opacity-80 font-medium mt-0.5">Pastes directly with all formatting</span>
+        </button>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- 4. SECTIONS INFÉRIEURES (POURQUOI, ÉTAPES, FAQ, FOOTER)        -->
+  <!-- ============================================================== -->
+  
+  <!-- Section: Pourquoi nous choisir -->
+  <section id="features-section" class="no-print max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+    <div class="text-center mb-10">
+      <h2 id="why-title-main" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+        Why thousands of users love ChatToDoc
+      </h2>
+      <p id="why-subtitle" class="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-2">
+        A solution built specifically to eliminate the chore of reformatting AI output.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Card 1: Vitesse Éclair -->
+      <div class="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-800/40 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center text-2xl font-bold mb-4 shadow-sm">
+          ⚡
+        </div>
+        <h3 id="feature-1-title" class="text-lg font-bold text-slate-900 dark:text-white mb-2">Lightning Speed (0 seconds)</h3>
+        <p id="feature-1-desc" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          Everything runs directly in your browser. No queues, no server lag: you paste and the result is ready in milliseconds.
+        </p>
+      </div>
+
+      <!-- Card 2: 100% Confidentiel -->
+      <div class="bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/40 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-2xl font-bold mb-4 shadow-sm">
+          🔒
+        </div>
+        <h3 id="feature-2-title" class="text-lg font-bold text-slate-900 dark:text-white mb-2">100% Private & Confidential</h3>
+        <p id="feature-2-desc" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          Your confidential reports, courses, or quotes never leave your device. No database stores your text, ensuring total privacy.
+        </p>
+      </div>
+
+      <!-- Card 3: Mise en page Zéro Défaut -->
+      <div class="bg-purple-50/70 dark:bg-purple-950/20 border border-purple-200/80 dark:border-purple-800/40 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+        <div class="w-12 h-12 rounded-xl bg-purple-600 text-white flex items-center justify-center text-2xl font-bold mb-4 shadow-sm">
+          💎
+        </div>
+        <h3 id="feature-3-title" class="text-lg font-bold text-slate-900 dark:text-white mb-2">Pixel-Perfect Layout</h3>
+        <p id="feature-3-desc" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          Real Word tables with alternating row stripes, impeccable heading line heights, bold styling preserved, and clean mathematical formulas.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Section: Comment ça marche (3 Étapes) -->
+  <section id="how-section" class="no-print max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+    <div class="bg-gradient-to-b from-white/90 to-purple-50/40 dark:from-slate-900/90 dark:to-purple-950/20 border border-purple-200/80 dark:border-purple-900/50 rounded-3xl p-8 sm:p-12 shadow-xl shadow-purple-950/5">
+      <div class="text-center mb-10">
+        <span id="how-badge-text" class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest bg-purple-100 dark:bg-purple-950/80 px-3 py-1 rounded-full">
+          Quick Guide
+        </span>
+        <h2 id="how-title-main" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-3">
+          Ready in just 3 simple steps
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+        
+        <!-- Étape 1 -->
+        <div class="flex flex-col items-center text-center">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white text-xl font-black flex items-center justify-center shadow-lg shadow-purple-500/30 mb-4">
+            1
+          </div>
+          <h3 id="step-1-title" class="text-base font-bold text-slate-900 dark:text-white mb-2">Copy your AI response</h3>
+          <p id="step-1-desc" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            Press <kbd class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-xs">Ctrl+C</kbd> in ChatGPT, Claude, Gemini, or DeepSeek after generating your text.
+          </p>
+        </div>
+
+        <!-- Étape 2 -->
+        <div class="flex flex-col items-center text-center">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 text-white text-xl font-black flex items-center justify-center shadow-lg shadow-pink-500/30 mb-4">
+            2
+          </div>
+          <h3 id="step-2-title" class="text-base font-bold text-slate-900 dark:text-white mb-2">Paste into ChatToDoc</h3>
+          <p id="step-2-desc" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            ChatToDoc strips useless chatter and automatically formats tables, headings, and lists in the A4 sheet.
+          </p>
+        </div>
+
+        <!-- Étape 3 -->
+        <div class="flex flex-col items-center text-center">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-pink-500 to-amber-500 text-white text-xl font-black flex items-center justify-center shadow-lg shadow-amber-500/30 mb-4">
+            3
+          </div>
+          <h3 id="step-3-title" class="text-base font-bold text-slate-900 dark:text-white mb-2">Download or Paste</h3>
+          <p id="step-3-desc" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            Click Word (.doc), PDF, or Excel, or click 'Copy for Docs' to paste directly into Google Docs or Gmail in 1 second.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Section: FAQ Accordion -->
+  <section id="faq-section" class="no-print max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+    <div class="text-center mb-8">
+      <h2 id="faq-title-main" class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">Frequently Asked Questions</h2>
+      <p id="faq-subtitle" class="text-sm text-slate-500 dark:text-slate-400 mt-1">Everything you need to know about ChatToDoc.</p>
+    </div>
+
+    <div class="space-y-3">
+      
+      <!-- FAQ 1 -->
+      <div class="bg-white/90 dark:bg-slate-900/90 border border-purple-100 dark:border-purple-900/40 rounded-xl overflow-hidden shadow-xs">
+        <button onclick="toggleFaq(this)" class="w-full px-5 py-4 text-left font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center justify-between gap-4 cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+          <span id="faq-q1">Are my documents sent to any remote server?</span>
+          <span class="faq-icon text-purple-600 dark:text-purple-400 text-lg leading-none">+</span>
+        </button>
+        <div class="faq-content hidden px-5 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-3">
+          <p id="faq-a1">No, absolutely not. All processing, cleaning, and conversion runs entirely on your own device (client-side in your web browser). Your data remains strictly private.</p>
+        </div>
+      </div>
+
+      <!-- FAQ 2 -->
+      <div class="bg-white/90 dark:bg-slate-900/90 border border-purple-100 dark:border-purple-900/40 rounded-xl overflow-hidden shadow-xs">
+        <button onclick="toggleFaq(this)" class="w-full px-5 py-4 text-left font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center justify-between gap-4 cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+          <span id="faq-q2">How does "Copy for Gmail / Docs" work?</span>
+          <span class="faq-icon text-purple-600 dark:text-purple-400 text-lg leading-none">+</span>
+        </button>
+        <div class="faq-content hidden px-5 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-3">
+          <p id="faq-a2">This button copies rich, styled HTML to your clipboard. When you press <kbd class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-700">Ctrl+V</kbd> in Google Docs, Word, or Gmail, all styling (colors, bordered tables, bold text) is preserved without any raw markdown symbols.</p>
+        </div>
+      </div>
+
+      <!-- FAQ 3 -->
+      <div class="bg-white/90 dark:bg-slate-900/90 border border-purple-100 dark:border-purple-900/40 rounded-xl overflow-hidden shadow-xs">
+        <button onclick="toggleFaq(this)" class="w-full px-5 py-4 text-left font-bold text-sm text-slate-800 dark:text-slate-100 flex items-center justify-between gap-4 cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+          <span id="faq-q3">Is this tool really 100% free?</span>
+          <span class="faq-icon text-purple-600 dark:text-purple-400 text-lg leading-none">+</span>
+        </button>
+        <div class="faq-content hidden px-5 pb-4 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-3">
+          <p id="faq-a3">Yes! ChatToDoc is a free, open tool with no sign-up, no subscription, and no usage limits.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============================================================== -->
+  <!-- FOOTER                                                         -->
+  <!-- ============================================================== -->
+  <footer class="no-print border-t border-purple-100 dark:border-purple-900/50 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center gap-3">
+      <div class="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
+        <span class="text-purple-600">⚡</span>
+        <span>ChatToDoc</span>
+        <span class="text-slate-300 dark:text-slate-700">·</span>
+        <span id="footer-baseline" class="text-slate-500 dark:text-slate-400 font-normal">Clean AI Response Converter</span>
+      </div>
+      <p id="footer-disclaimer" class="text-xs text-slate-400 dark:text-slate-500 max-w-xl">
+        ChatToDoc is an independent project and is not affiliated, sponsored, or endorsed by OpenAI (ChatGPT), Anthropic (Claude), Google (Gemini), or Microsoft.
+      </p>
+      <div id="footer-signature" class="text-xs font-semibold text-purple-600/80 dark:text-purple-400/80 mt-1">
+        Crafted with ❤️ for students & professionals worldwide
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================== -->
+  <!-- TOAST NOTIFICATION POPUP                                       -->
+  <!-- ============================================================== -->
+  <div 
+    id="toast-notification" 
+    class="no-print fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xl font-bold text-xs sm:text-sm transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none"
+  >
+    <span id="toast-icon">✨</span>
+    <span id="toast-message">Ready!</span>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- JAVASCRIPT: LOGIC, THEMES, EXPORTS, I18N                       -->
+  <!-- ============================================================== -->
+  <script>
+    // -------------------------------------------------------------
+    // Themes definitions
+    // -------------------------------------------------------------
+    const THEMES = {
+      blue: {
+        primary: '#2563EB',
+        border: '#93C5FD',
+        bgSubtle: '#EFF6FF',
+      },
+      emerald: {
+        primary: '#059669',
+        border: '#A7F3D0',
+        bgSubtle: '#ECFDF5',
+      },
+      purple: {
+        primary: '#7C3AED',
+        border: '#DDD6FE',
+        bgSubtle: '#F5F3FF',
+      },
+      coral: {
+        primary: '#E11D48',
+        border: '#FECDD3',
+        bgSubtle: '#FFF1F2',
+      },
+      mono: {
+        primary: '#0F172A',
+        border: '#CBD5E1',
+        bgSubtle: '#F8FAFC',
+      }
+    };
+
+    // -------------------------------------------------------------
+    // Multilingual Translations (EN default, FR, ES)
+    // -------------------------------------------------------------
+    const TRANSLATIONS = {
+      en: {
+        pageTitle: "ChatToDoc - Convert AI Responses into Clean Word, PDF & Excel",
+        metaDesc: "Transform raw responses from ChatGPT, Claude, Gemini, and DeepSeek into beautifully formatted Word, PDF, and Excel documents without broken markdown.",
+        brandSub: "AI to Word, PDF & Excel",
+        navTool: "The Tool",
+        navHow: "How It Works",
+        navFeatures: "Benefits",
+        navFaq: "FAQ",
+        badgeFree: "100% Free & Instant",
+        themeDark: "Dark Mode",
+        themeLight: "Light Mode",
+        heroTitle1: "Transform AI Responses into",
+        heroTitle2: "Clean & Flawless Documents",
+        heroSubtitle: "No more asterisks **, hashtags ### and broken tables. Paste your raw response and download in 1 click a Word, PDF, or Excel file ready for your boss or professor.",
+        toggleChatter: "Clean AI intro/outro",
+        toggleMarkdown: "Fix tables & symbols",
+        toggleEmojis: "Remove emojis",
+        toggleHumanize: "🕵️ Humanize Text (Bypass AI Detection)",
+        styleLabel: "Style:",
+        styles: {
+          blue: "Royal Blue (Pro / Corporate)",
+          emerald: "Emerald Green (Finance & Audit)",
+          purple: "Royal Purple (Creative / Tech)",
+          coral: "Warm Coral (Editorial)",
+          mono: "Minimalist Monochrome"
+        },
+        inputTitle: "Raw AI Output",
+        wordsUnit: "words",
+        wordUnit: "word",
+        charsUnit: "chars",
+        quickPresets: "Quick presets:",
+        presetReport: "Report",
+        presetAcademic: "Course",
+        presetInvoice: "Quote",
+        pasteBtn: "Paste",
+        clearBtn: "Clear",
+        placeholder: "Paste your raw response from ChatGPT, Claude, Gemini, or DeepSeek here...\n\nWhat ChatToDoc cleans automatically:\n- Asterisks ** and ### headers\n- Chatty intros like 'Sure! Here is your document:'\n- Markdown tables | col 1 | col 2 |\n- Scientific formulas and calculations\n- Bullet lists and quotes",
+        detectedWaiting: "Waiting for text...",
+        detectedSuffix: "detected",
+        featuresTag: {
+          tables: "Tables",
+          headings: "Headings",
+          lists: "Lists",
+          math: "Formulas"
+        },
+        previewTitle: "Live Preview (Pure A4 Sheet)",
+        previewPrintLabel: "Print / PDF",
+        defaultDocFilename: "ChatToDoc_Document",
+        sheetFooterMention: "Document formatted with ChatToDoc",
+        pageCounter: "Page 1 / 1",
+        exportTitle: "1-Click Download in Your Desired Format",
+        exportSubtitle: "Native formatting preserved for Google Docs, Microsoft Word, LibreOffice, and Excel.",
+        exportReady: "Ready for download",
+        btnWordTitle: "Download Word",
+        btnWordSub: "Clean .doc / .docx format",
+        btnPdfTitle: "Download / Print PDF",
+        btnPdfSub: "High-definition A4 page",
+        btnExcelTitle: "Export to Excel",
+        btnExcelSub: "Tables in .xls format",
+        btnCopyTitle: "Copy for Gmail / Docs",
+        btnCopySub: "Pastes directly with all formatting",
+        whyTitleMain: "Why thousands of users love ChatToDoc",
+        whySubtitle: "A solution built specifically to eliminate the chore of reformatting AI output.",
+        feature1Title: "Lightning Speed (0 seconds)",
+        feature1Desc: "Everything runs directly in your browser. No queues, no server lag: you paste and the result is ready in milliseconds.",
+        feature2Title: "100% Private & Confidential",
+        feature2Desc: "Your confidential reports, courses, or quotes never leave your device. No database stores your text, ensuring total privacy.",
+        feature3Title: "Pixel-Perfect Layout",
+        feature3Desc: "Real Word tables with alternating row stripes, impeccable heading line heights, bold styling preserved, and clean mathematical formulas.",
+        howBadge: "Quick Guide",
+        howTitleMain: "Ready in just 3 simple steps",
+        step1Title: "Copy your AI response",
+        step1Desc: "Press <kbd class=\"bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-xs\">Ctrl+C</kbd> in ChatGPT, Claude, Gemini, or DeepSeek after generating your text.",
+        step2Title: "Paste into ChatToDoc",
+        step2Desc: "ChatToDoc strips useless chatter and automatically formats tables, headings, and lists in the A4 sheet.",
+        step3Title: "Download or Paste",
+        step3Desc: "Click Word (.doc), PDF, or Excel, or click 'Copy for Docs' to paste directly into Google Docs or Gmail in 1 second.",
+        faqTitleMain: "Frequently Asked Questions",
+        faqSubtitle: "Everything you need to know about ChatToDoc.",
+        faqQ1: "Are my documents sent to any remote server?",
+        faqA1: "No, absolutely not. All processing, cleaning, and conversion runs entirely on your own device (client-side in your web browser). Your data remains strictly private.",
+        faqQ2: "How does \"Copy for Gmail / Docs\" work?",
+        faqA2: "This button copies rich, styled HTML to your clipboard. When you press <kbd class=\"bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-700\">Ctrl+V</kbd> in Google Docs, Word, or Gmail, all styling (colors, bordered tables, bold text) is preserved without any raw markdown symbols.",
+        faqQ3: "Is this tool really 100% free?",
+        faqA3: "Yes! ChatToDoc is a free, open tool with no sign-up, no subscription, and no usage limits.",
+        footerBaseline: "Clean AI Response Converter",
+        footerDisclaimer: "ChatToDoc is an independent project and is not affiliated, sponsored, or endorsed by OpenAI (ChatGPT), Anthropic (Claude), Google (Gemini), or Microsoft.",
+        footerSignature: "Crafted with ❤️ for students & professionals worldwide",
+        toastWord: "📄 Word document (.doc) downloaded successfully!",
+        toastPdf: "🖨️ Preparing PDF print dialog...",
+        toastExcel: "📊 Excel file (.xls) downloaded successfully!",
+        toastNoTable: "⚠️ No tables detected in your text for Excel!",
+        toastCopy: "🎉 Copied with formatting! Paste directly into Word, Docs, or Gmail.",
+        toastPaste: "📋 Text pasted from clipboard!",
+        toastClear: "Text area cleared.",
+        toastTheme: "Document style changed to",
+        toastDark: "🌙 Dark mode activated",
+        toastLight: "☀️ Light mode activated",
+        toastLang: "Language changed to English"
+      },
+      fr: {
+        pageTitle: "ChatToDoc - Convertisseur de réponses IA vers Word, PDF et Excel",
+        metaDesc: "Transforme tes réponses brutes de ChatGPT, Claude, Gemini et DeepSeek en documents Word, PDF et Excel parfaitement mis en page sans markdown cassé.",
+        brandSub: "IA vers Word, PDF & Excel",
+        navTool: "L'Outil",
+        navHow: "Comment ça marche",
+        navFeatures: "Avantages",
+        navFaq: "FAQ",
+        badgeFree: "100% Gratuit & Instantané",
+        themeDark: "Mode Sombre",
+        themeLight: "Mode Clair",
+        heroTitle1: "Transforme tes réponses d'IA en",
+        heroTitle2: "Documents Propres & Parfaits",
+        heroSubtitle: "Fini les étoiles **, les dièses ### et les tableaux cassés. Colle ta réponse brute et télécharge en 1 clic un fichier Word, PDF ou Excel prêt pour ton patron ou ton prof.",
+        toggleChatter: "Nettoyer intro/fin IA",
+        toggleMarkdown: "Réparer tableaux & symboles",
+        toggleEmojis: "Retirer les emojis",
+        toggleHumanize: "🕵️ Humaniser le texte (IA Indétectable)",
+        styleLabel: "Style :",
+        styles: {
+          blue: "Bleu Roi (Pro / Entreprise)",
+          emerald: "Vert Émeraude (Finance & Audit)",
+          purple: "Violet Royal (Créatif / Tech)",
+          coral: "Corail Chaleureux (Éditorial)",
+          mono: "Noir & Blanc Minimaliste"
+        },
+        inputTitle: "Texte brut issu de l'IA",
+        wordsUnit: "mots",
+        wordUnit: "mot",
+        charsUnit: "car.",
+        quickPresets: "Exemples rapides :",
+        presetReport: "Rapport",
+        presetAcademic: "Cours",
+        presetInvoice: "Devis",
+        pasteBtn: "Coller",
+        clearBtn: "Effacer",
+        placeholder: "Colle ici ta réponse brute de ChatGPT, Claude, Gemini ou DeepSeek...\n\nExemple de ce que ChatToDoc nettoie automatiquement :\n- Les étoiles ** et ###\n- Les intros du genre « Certainement ! Voici votre document : »\n- Les tableaux markdown | col 1 | col 2 |\n- Les formules scientifiques et calculs\n- Les listes et citations",
+        detectedWaiting: "En attente de texte...",
+        detectedSuffix: "détectés",
+        featuresTag: {
+          tables: "Tableaux",
+          headings: "Titres",
+          lists: "Listes",
+          math: "Formules"
+        },
+        previewTitle: "Aperçu direct (Feuille A4 Pure)",
+        previewPrintLabel: "Imprimer / PDF",
+        defaultDocFilename: "Document_ChatToDoc",
+        sheetFooterMention: "Document mis en page avec ChatToDoc",
+        pageCounter: "Page 1 / 1",
+        exportTitle: "Télécharger en 1 Clic dans le format de ton choix",
+        exportSubtitle: "Mise en page native préservée pour Google Docs, Microsoft Word, LibreOffice et Excel.",
+        exportReady: "Prêt pour téléchargement",
+        btnWordTitle: "Télécharger Word",
+        btnWordSub: "Format .doc / .docx propre",
+        btnPdfTitle: "Télécharger / Imprimer PDF",
+        btnPdfSub: "Feuille A4 haute définition",
+        btnExcelTitle: "Exporter vers Excel",
+        btnExcelSub: "Tableaux au format .xls",
+        btnCopyTitle: "Copier pour Gmail / Docs",
+        btnCopySub: "Colle direct avec la mise en page",
+        whyTitleMain: "Pourquoi des milliers d'utilisateurs adorent ChatToDoc",
+        whySubtitle: "Une solution conçue spécialement pour supprimer la corvée du reformatage d'IA.",
+        feature1Title: "Vitesse Éclair (0 seconde)",
+        feature1Desc: "Tout le traitement s'exécute directement dans votre navigateur. Pas de file d'attente, pas de chargement serveur : vous collez et le résultat est prêt à la milliseconde.",
+        feature2Title: "100% Confidentiel & Privé",
+        feature2Desc: "Vos rapports confidentiels, cours ou devis ne quittent jamais votre machine. Aucune base de données ne stocke votre texte, pour un respect total du RGPD et de vos secrets.",
+        feature3Title: "Mise en page Zéro Défaut",
+        feature3Desc: "Vrais tableaux Word avec bandes alternées, titres avec interlignes impeccables, gras préservé et formules mathématiques nettes sans symboles parasites.",
+        howBadge: "Guide Rapide",
+        howTitleMain: "Prêt en seulement 3 étapes simples",
+        step1Title: "Copie ta réponse d'IA",
+        step1Desc: "Fais un simple <kbd class=\"bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-xs\">Ctrl+C</kbd> sur ChatGPT, Claude, Gemini ou DeepSeek après avoir posé ta question.",
+        step2Title: "Colle dans ChatToDoc",
+        step2Desc: "ChatToDoc supprime les phrases inutiles d'intro et formate automatiquement les tableaux, titres et listes dans l'aperçu A4.",
+        step3Title: "Télécharge ou Colle",
+        step3Desc: "Clique sur Word (.doc), PDF ou Excel, ou fais 'Copier pour Docs' pour coller directement dans Google Docs ou Gmail en 1 seconde.",
+        faqTitleMain: "Questions Fréquemment Posées",
+        faqSubtitle: "Tout ce que vous devez savoir sur ChatToDoc.",
+        faqQ1: "Est-ce que mes documents sont envoyés sur un serveur distant ?",
+        faqA1: "Non, absolument pas. Tout le traitement, le nettoyage et la conversion Word/PDF s'exécutent entièrement sur votre propre ordinateur (côté client dans votre navigateur web). Vos données restent strictement privées.",
+        faqQ2: "Comment fonctionne le bouton \"Copier pour Gmail / Docs\" ?",
+        faqA2: "Ce bouton injecte dans votre presse-papier du HTML enrichi et stylisé (compatible Word, Google Docs et Gmail). Quand vous faites <kbd class=\"bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-700\">Ctrl+V</kbd> dans un document Google Docs ou un e-mail Gmail, toute la mise en page (couleurs, tableaux avec bordures, texte en gras) est préservée sans aucun symbole markdown parasite.",
+        faqQ3: "L'outil est-il vraiment 100% gratuit ?",
+        faqA3: "Oui ! ChatToDoc est un outil libre et gratuit, sans inscription, sans abonnement et sans limite d'utilisation.",
+        footerBaseline: "Convertisseur de réponses d'IA propre",
+        footerDisclaimer: "ChatToDoc est un projet indépendant et n'est pas affilié, sponsorisé ni approuvé par OpenAI (ChatGPT), Anthropic (Claude), Google (Gemini) ou Microsoft.",
+        footerSignature: "Conçu avec ❤️ pour les étudiants & professionnels",
+        toastWord: "📄 Document Word (.doc) téléchargé avec succès !",
+        toastPdf: "🖨️ Préparation de la boîte de dialogue PDF...",
+        toastExcel: "📊 Fichier Excel (.xls) téléchargé avec succès !",
+        toastNoTable: "⚠️ Aucun tableau détecté dans votre texte pour Excel !",
+        toastCopy: "🎉 Copié avec mise en page ! Colle directement dans Word, Docs ou Gmail.",
+        toastPaste: "📋 Texte collé depuis le presse-papier !",
+        toastClear: "Zone de texte effacée.",
+        toastTheme: "Style de document changé en",
+        toastDark: "🌙 Mode sombre activé",
+        toastLight: "☀️ Mode clair activé",
+        toastLang: "Langue changée en Français"
+      },
+      es: {
+        pageTitle: "ChatToDoc - Convierte Respuestas de IA en Word, PDF y Excel Limpios",
+        metaDesc: "Transforma respuestas en bruto de ChatGPT, Claude, Gemini y DeepSeek en documentos de Word, PDF y Excel con un formato impecable y sin markdown roto.",
+        brandSub: "IA a Word, PDF y Excel",
+        navTool: "La Herramienta",
+        navHow: "Cómo Funciona",
+        navFeatures: "Ventajas",
+        navFaq: "Preguntas Frecuentes",
+        badgeFree: "100% Gratis e Instantáneo",
+        themeDark: "Modo Oscuro",
+        themeLight: "Modo Claro",
+        heroTitle1: "Transforma tus respuestas de IA en",
+        heroTitle2: "Documentos Limpios y Perfectos",
+        heroSubtitle: "Olvídate de asteriscos **, almohadillas ### y tablas rotas. Pega tu respuesta en bruto y descarga en 1 clic un archivo Word, PDF o Excel listo para tu jefe o profesor.",
+        toggleChatter: "Limpiar intro/cierre IA",
+        toggleMarkdown: "Reparar tablas y símbolos",
+        toggleEmojis: "Eliminar emojis",
+        toggleHumanize: "🕵️ Humanizar texto (IA Indetectable)",
+        styleLabel: "Estilo:",
+        styles: {
+          blue: "Azul Real (Pro / Corporativo)",
+          emerald: "Verde Esmeralda (Finanzas y Auditoría)",
+          purple: "Púrpura Real (Creativo / Tech)",
+          coral: "Coral Cálido (Editorial)",
+          mono: "Monocromo Minimalista"
+        },
+        inputTitle: "Texto en bruto de la IA",
+        wordsUnit: "palabras",
+        wordUnit: "palabra",
+        charsUnit: "caracteres",
+        quickPresets: "Ejemplos rápidos:",
+        presetReport: "Informe",
+        presetAcademic: "Curso",
+        presetInvoice: "Presupuesto",
+        pasteBtn: "Pegar",
+        clearBtn: "Borrar",
+        placeholder: "Pega aquí tu respuesta en bruto de ChatGPT, Claude, Gemini o DeepSeek...\n\nLo que ChatToDoc limpia automáticamente:\n- Asteriscos ** y encabezados ###\n- Saludos innecesarios como '¡Por supuesto! Aquí tienes tu documento:'\n- Tablas markdown | col 1 | col 2 |\n- Fórmulas científicas y cálculos\n- Listas y citas",
+        detectedWaiting: "Esperando texto...",
+        detectedSuffix: "detectados",
+        featuresTag: {
+          tables: "Tablas",
+          headings: "Títulos",
+          lists: "Listas",
+          math: "Fórmulas"
+        },
+        previewTitle: "Vista previa en vivo (Hoja A4 Pura)",
+        previewPrintLabel: "Imprimir / PDF",
+        defaultDocFilename: "Documento_ChatToDoc",
+        sheetFooterMention: "Documento formateado con ChatToDoc",
+        pageCounter: "Página 1 / 1",
+        exportTitle: "Descarga en 1 Clic en el Formato que Elijas",
+        exportSubtitle: "Formato nativo preservado para Google Docs, Microsoft Word, LibreOffice y Excel.",
+        exportReady: "Listo para descargar",
+        btnWordTitle: "Descargar Word",
+        btnWordSub: "Formato .doc / .docx limpio",
+        btnPdfTitle: "Descargar / Imprimir PDF",
+        btnPdfSub: "Página A4 de alta definición",
+        btnExcelTitle: "Exportar a Excel",
+        btnExcelSub: "Tablas en formato .xls",
+        btnCopyTitle: "Copiar para Gmail / Docs",
+        btnCopySub: "Pega directo con todo el diseño",
+        whyTitleMain: "¿Por qué miles de usuarios eligen ChatToDoc",
+        whySubtitle: "Una solución diseñada especialmente para eliminar la molestia de reformatear la IA.",
+        feature1Title: "Velocidad Ultrarrápida (0 segundos)",
+        feature1Desc: "Todo el procesamiento se ejecuta directamente en tu navegador. Sin colas ni esperas: pegas y el resultado está listo al instante.",
+        feature2Title: "100% Privado y Confidencial",
+        feature2Desc: "Tus informes confidenciales, cursos o presupuestos nunca salen de tu dispositivo. Ninguna base de datos guarda tu texto.",
+        feature3Title: "Diseño Impecable y Profesional",
+        feature3Desc: "Tablas reales de Word con filas alternadas, encabezados con interlineado perfecto, negritas preservadas y fórmulas matemáticas nítidas.",
+        howBadge: "Guía Rápida",
+        howTitleMain: "Listo en solo 3 sencillos pasos",
+        step1Title: "Copia tu respuesta de IA",
+        step1Desc: "Haz un simple <kbd class=\"bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 text-xs\">Ctrl+C</kbd> en ChatGPT, Claude, Gemini o DeepSeek tras generar tu texto.",
+        step2Title: "Pega en ChatToDoc",
+        step2Desc: "ChatToDoc elimina introducciones innecesarias y formatea automáticamente tablas, títulos y listas en la hoja A4.",
+        step3Title: "Descarga o Pega",
+        step3Desc: "Haz clic en Word (.doc), PDF o Excel, o pulsa 'Copiar para Docs' para pegar directamente en Google Docs o Gmail en 1 segundo.",
+        faqTitleMain: "Preguntas Frecuentes",
+        faqSubtitle: "Todo lo que necesitas saber sobre ChatToDoc.",
+        faqQ1: "¿Se envían mis documentos a algún servidor remoto?",
+        faqA1: "No, en absoluto. Todo el procesamiento, limpieza y conversión se ejecuta completamente en tu propio dispositivo (en el navegador web). Tus datos son totalmente privados.",
+        faqQ2: "¿Cómo funciona el botón 'Copiar para Gmail / Docs'?",
+        faqA2: "Este botón inyecta en tu portapapeles HTML enriquecido y estilizado. Al pulsar <kbd class=\"bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-700\">Ctrl+V</kbd> en Google Docs, Word o Gmail, todo el diseño se mantiene intacto.",
+        faqQ3: "¿Esta herramienta es realmente 100% gratuita?",
+        faqA3: "¡Sí! ChatToDoc es una herramienta libre y gratuita, sin registro, sin suscripción y sin límites.",
+        footerBaseline: "Convertidor de respuestas de IA limpio",
+        footerDisclaimer: "ChatToDoc es un proyecto independiente y no está afiliado, patrocinado ni respaldado por OpenAI (ChatGPT), Anthropic (Claude), Google (Gemini) o Microsoft.",
+        footerSignature: "Diseñado con ❤️ para estudiantes y profesionales de todo el mundo",
+        toastWord: "📄 ¡Documento de Word (.doc) descargado con éxito!",
+        toastPdf: "🖨️ Abriendo el cuadro de diálogo de impresión...",
+        toastExcel: "📊 ¡Archivo de Excel (.xls) descargado con éxito!",
+        toastNoTable: "⚠️ ¡No se detectaron tablas en tu texto para exportar a Excel!",
+        toastCopy: "🎉 ¡Copiado con diseño! Pégalo directamente en Word, Docs o Gmail.",
+        toastPaste: "📋 ¡Texto pegado desde el portapapeles!",
+        toastClear: "Área de texto borrada.",
+        toastTheme: "Estilo de documento cambiado a",
+        toastDark: "🌙 Modo oscuro activado",
+        toastLight: "☀️ Modo claro activado",
+        toastLang: "Idioma cambiado a Español"
+      }
+    };
+
+    // -------------------------------------------------------------
+    // Quick Preset Samples
+    // -------------------------------------------------------------
+    const SAMPLES = {
+      en: {
+        report: `# Executive Report: Q4 2026 Strategic Review\n\n> This quarterly report highlights financial performance and corporate goals achieved across all departments.\n\n## 1. Key Performance Indicators\n\n| Indicator | Target | Achieved | Variance |\n|---|---|---|---|\n| Operating Margin | 24.5% | 27.2% | +2.7% |\n| Customer Retention | 92.0% | 94.6% | +2.6% |\n| Annual ARR Growth | +30.0% | +38.5% | +8.5% |\n\n## 2. Key Takeaways\n- Accelerated AI automation across support\n- Expansion into European markets\n- Consolidated cash reserves exceeding targets`,
+        academic: `# Modern Physics: Quantum Mechanics Foundations\n\n> Lecture Notes - Chapter 4: Wave-Particle Duality\n\n## 1. Mathematical Formulation\n\nThe fundamental energy relationship for photons:\n\n$$E = h \\cdot \\nu = \\frac{h \\cdot c}{\\lambda}$$\n\nWhere:\n- $E$ is photon energy in Joules\n- $h$ is Planck's constant ($6.626 \\times 10^{-34} \\text{ J}\\cdot\\text{s}$)\n- $\\lambda$ represents radiation wavelength\n\n## 2. Observation Table\n\n| Particle Type | Mass (kg) | Velocity (m/s) | de Broglie $\\lambda$ |\n|---|---|---|---|\n| Electron | 9.11e-31 | 1.00e6 | 7.27e-10 m |\n| Proton | 1.67e-27 | 2.50e4 | 1.58e-11 m |`,
+        invoice: `# Invoice #INV-2026-089\n\n> Date: November 8, 2026 | Due Date: Net 30 Days\n\n## Billing Details\n- **Client:** Acme Global Enterprises\n- **Provider:** Digital Solutions Consulting\n\n## Summary Table\n\n| Item Description | Quantity | Rate ($) | Total ($) |\n|---|---|---|---|\n| Cloud Architecture Consulting | 40 hrs | 150.00 | 6,000.00 |\n| UI/UX Redesign System | 1 unit | 4,500.00 | 4,500.00 |\n| Automated Testing Pipeline | 1 unit | 2,200.00 | 2,200.00 |\n\n**Total Due:** $12,700.00`
+      },
+      fr: {
+        report: `# Rapport Stratégique : Bilan Annuel 2026\n\n> Ce rapport de synthèse présente les résultats consolidés et les perspectives de croissance du groupe.\n\n## 1. Indicateurs Clés de Performance\n\n| Indicateur | Objectif | Réalisé | Écart |\n|---|---|---|---|\n| Marge d'exploitation | 24.5% | 27.2% | +2.7% |\n| Taux de rétention client | 92.0% | 94.6% | +2.6% |\n| Croissance annuelle ARR | +30.0% | +38.5% | +8.5% |\n\n## 2. Décisions Stratégiques\n- Automatisation des processus d'audit\n- Recrutement de 15 profils seniors\n- Finalisation de l'intégration Cloud`,
+        academic: `# Physique Moderne : Mécanique Quantique\n\n> Support de cours - Chapitre 4 : Dualité Onde-Corpuscule\n\n## 1. Formulation Mathématique\n\nFormule fondamentale de l'énergie des photons :\n\n$$E = h \\cdot \\nu = \\frac{h \\cdot c}{\\lambda}$$\n\nOù :\n- $E$ est l'énergie en Joules\n- $h$ est la constante de Planck ($6.626 \\times 10^{-34} \\text{ J}\\cdot\\text{s}$)\n- $\\lambda$ est la longueur d'onde\n\n## 2. Tableau Récapitulatif\n\n| Particule | Masse (kg) | Vitesse (m/s) | $\\lambda$ de de Broglie |\n|---|---|---|---|\n| Électron | 9.11e-31 | 1.00e6 | 7.27e-10 m |\n| Proton | 1.67e-27 | 2.50e4 | 1.58e-11 m |`,
+        invoice: `# Facture #FAC-2026-089\n\n> Date : 8 Novembre 2026 | Règlement : 30 jours net\n\n## Coordonnées\n- **Client :** Société Acme France\n- **Prestataire :** Cabinet Digital Solutions\n\n## Tableau des Prestations\n\n| Désignation | Quantité | Prix Unit. HT | Total HT |\n|---|---|---|---|\n| Audit d'architecture Cloud | 40 heures | 150,00 € | 6 000,00 € |\n| Refonte UI/UX Documentaire | 1 forfait | 4 500,00 € | 4 500,00 € |\n\n**Total HT :** 10 500,00 €`
+      },
+      es: {
+        report: `# Informe Estratégico: Balance Anual 2026\n\n> Este informe sintetiza los resultados financieros y operativos obtenidos por la compañía.\n\n## 1. Indicadores Clave de Rendimiento\n\n| Indicador | Objetivo | Conseguido | Diferencia |\n|---|---|---|---|\n| Margen operativo | 24.5% | 27.2% | +2.7% |\n| Retención de clientes | 92.0% | 94.6% | +2.6% |\n| Crecimiento ARR | +30.0% | +38.5% | +8.5% |\n\n## 2. Conclusiones Principales\n- Despliegue de automatización con IA\n- Expansión internacional en curso\n- Superávit de liquidez confirmado`,
+        academic: `# Física Cuántica: Fundamentos\n\n> Notas de Clase - Capítulo 4: Dualidad Onda-Partícula\n\n## 1. Formulación Matemática\n\nEcuación de energía para el fotón:\n\n$$E = h \\cdot \\nu = \\frac{h \\cdot c}{\\lambda}$$\n\nDonde:\n- $E$ representa la energía en Julios\n- $h$ es la constante de Planck ($6.626 \\times 10^{-34} \\text{ J}\\cdot\\text{s}$)\n- $\\lambda$ es la longitud de onda\n\n## 2. Medidas Experimentales\n\n| Partícula | Masa (kg) | Velocidad (m/s) | $\\lambda$ de Broglie |\n|---|---|---|---|\n| Electrón | 9.11e-31 | 1.00e6 | 7.27e-10 m |\n| Protón | 1.67e-27 | 2.50e4 | 1.58e-11 m |`,
+        invoice: `# Presupuesto #PRE-2026-089\n\n> Fecha: 8 de Noviembre de 2026 | Validez: 30 días\n\n## Datos del Cliente\n- **Cliente:** Soluciones Globales S.A.\n- **Proveedor:** Consultoría Digital Pro\n\n## Tabla de Conceptos\n\n| Concepto | Horas/Uds | Tarifa ($) | Total ($) |\n|---|---|---|---|\n| Auditoría Cloud | 40 horas | 150.00 | 6,000.00 |\n| Diseño de Interfaz | 1 paquete | 4,500.00 | 4,500.00 |\n\n**Total Final:** $10,500.00`
+      }
+    };
+
+    // Global Active State
+    let currentThemeKey = 'blue';
+    let currentLang = 'en';
+
+    // -------------------------------------------------------------
+    // Language Switcher Function
+    // -------------------------------------------------------------
+    function setLanguage(lang) {
+      if (!TRANSLATIONS[lang]) lang = 'en';
+      currentLang = lang;
+      try {
+        localStorage.setItem('chattodoc-lang', lang);
+      } catch (e) {}
+
+      document.documentElement.lang = lang;
+
+      // Update Header language buttons
+      const activeClass = "px-2.5 py-1 rounded-lg transition-all cursor-pointer bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 shadow-xs font-bold";
+      const inactiveClass = "px-2.5 py-1 rounded-lg transition-all cursor-pointer text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-bold";
+
+      const btnEn = document.getElementById('lang-btn-en');
+      const btnFr = document.getElementById('lang-btn-fr');
+      const btnEs = document.getElementById('lang-btn-es');
+      if (btnEn) btnEn.className = (lang === 'en') ? activeClass : inactiveClass;
+      if (btnFr) btnFr.className = (lang === 'fr') ? activeClass : inactiveClass;
+      if (btnEs) btnEs.className = (lang === 'es') ? activeClass : inactiveClass;
+
+      const t = TRANSLATIONS[lang];
+
+      // Meta and Header
+      document.title = t.pageTitle;
+      const metaTitle = document.getElementById('meta-title');
+      if (metaTitle) metaTitle.innerText = t.pageTitle;
+      const metaDesc = document.getElementById('meta-desc');
+      if (metaDesc) metaDesc.content = t.metaDesc;
+
+      document.getElementById('nav-brand-sub').innerText = t.brandSub;
+      document.getElementById('nav-tool').innerText = t.navTool;
+      document.getElementById('nav-how').innerText = t.navHow;
+      document.getElementById('nav-features').innerText = t.navFeatures;
+      document.getElementById('nav-faq').innerText = t.navFaq;
+      document.getElementById('header-free-badge').innerText = t.badgeFree;
+
+      updateThemeToggleUI();
+
+      // Hero
+      document.getElementById('hero-title-1').innerText = t.heroTitle1;
+      document.getElementById('hero-title-2').innerText = t.heroTitle2;
+      document.getElementById('hero-subtitle').innerHTML = t.heroSubtitle.replace(
+        /\*\*/g, '<code class="bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-200 px-1.5 py-0.5 rounded font-mono text-sm font-semibold">**</code>'
+      ).replace(
+        /###/g, '<code class="bg-purple-100 dark:bg-purple-950/80 text-purple-800 dark:text-purple-200 px-1.5 py-0.5 rounded font-mono text-sm font-semibold">###</code>'
+      );
+
+      // Toolbar
+      document.getElementById('toggle-clean-chatter-label').innerText = t.toggleChatter;
+      document.getElementById('toggle-fix-markdown-label').innerText = t.toggleMarkdown;
+      document.getElementById('toggle-strip-emojis-label').innerText = t.toggleEmojis;
+      const humanizeToggleLabel = document.getElementById('humanize-toggle-label');
+      if (humanizeToggleLabel) humanizeToggleLabel.innerText = t.toggleHumanize;
+      document.getElementById('style-select-label').innerText = t.styleLabel;
+      document.getElementById('theme-opt-blue').innerText = t.styles.blue;
+      document.getElementById('theme-opt-emerald').innerText = t.styles.emerald;
+      document.getElementById('theme-opt-purple').innerText = t.styles.purple;
+      document.getElementById('theme-opt-coral').innerText = t.styles.coral;
+      document.getElementById('theme-opt-mono').innerText = t.styles.mono;
+
+      // Workspace Left
+      document.getElementById('input-column-title').innerText = t.inputTitle;
+      document.getElementById('quick-presets-label').innerText = t.quickPresets;
+      document.getElementById('preset-btn-report').innerText = t.presetReport;
+      document.getElementById('preset-btn-academic').innerText = t.presetAcademic;
+      document.getElementById('preset-btn-invoice').innerText = t.presetInvoice;
+      document.getElementById('paste-btn-text').innerText = t.pasteBtn;
+      document.getElementById('clear-btn-text').innerText = t.clearBtn;
+      document.getElementById('raw-ai-input').placeholder = t.placeholder;
+
+      // Workspace Right
+      document.getElementById('preview-strip-title').innerText = t.previewTitle;
+      const previewPrintEl = document.getElementById('preview-print-label');
+      if (previewPrintEl) previewPrintEl.innerText = t.previewPrintLabel || 'Print / PDF';
+      document.getElementById('doc-footer-mention').innerText = t.sheetFooterMention;
+      document.getElementById('doc-page-counter').innerText = t.pageCounter;
+
+      // Export section
+      document.getElementById('export-section-title').innerText = t.exportTitle;
+      document.getElementById('export-section-subtitle').innerText = t.exportSubtitle;
+      document.getElementById('export-ready-text').innerText = t.exportReady;
+      document.getElementById('btn-word-title').innerText = t.btnWordTitle;
+      document.getElementById('btn-word-sub').innerText = t.btnWordSub;
+      document.getElementById('btn-pdf-title').innerText = t.btnPdfTitle;
+      document.getElementById('btn-pdf-sub').innerText = t.btnPdfSub;
+      document.getElementById('btn-excel-title').innerText = t.btnExcelTitle;
+      document.getElementById('btn-excel-sub').innerText = t.btnExcelSub;
+      document.getElementById('btn-copy-title').innerText = t.btnCopyTitle;
+      document.getElementById('btn-copy-sub').innerText = t.btnCopySub;
+
+      // Why us
+      document.getElementById('why-title-main').innerText = t.whyTitleMain;
+      document.getElementById('why-subtitle').innerText = t.whySubtitle;
+      document.getElementById('feature-1-title').innerText = t.feature1Title;
+      document.getElementById('feature-1-desc').innerText = t.feature1Desc;
+      document.getElementById('feature-2-title').innerText = t.feature2Title;
+      document.getElementById('feature-2-desc').innerText = t.feature2Desc;
+      document.getElementById('feature-3-title').innerText = t.feature3Title;
+      document.getElementById('feature-3-desc').innerText = t.feature3Desc;
+
+      // How it works
+      document.getElementById('how-badge-text').innerText = t.howBadge;
+      document.getElementById('how-title-main').innerText = t.howTitleMain;
+      document.getElementById('step-1-title').innerText = t.step1Title;
+      document.getElementById('step-1-desc').innerHTML = t.step1Desc;
+      document.getElementById('step-2-title').innerText = t.step2Title;
+      document.getElementById('step-2-desc').innerText = t.step2Desc;
+      document.getElementById('step-3-title').innerText = t.step3Title;
+      document.getElementById('step-3-desc').innerText = t.step3Desc;
+
+      // FAQ
+      document.getElementById('faq-title-main').innerText = t.faqTitleMain;
+      document.getElementById('faq-subtitle').innerText = t.faqSubtitle;
+      document.getElementById('faq-q1').innerText = t.faqQ1;
+      document.getElementById('faq-a1').innerText = t.faqA1;
+      document.getElementById('faq-q2').innerText = t.faqQ2;
+      document.getElementById('faq-a2').innerHTML = t.faqA2;
+      document.getElementById('faq-q3').innerText = t.faqQ3;
+      document.getElementById('faq-a3').innerText = t.faqA3;
+
+      // Footer
+      document.getElementById('footer-baseline').innerText = t.footerBaseline;
+      document.getElementById('footer-disclaimer').innerText = t.footerDisclaimer;
+      document.getElementById('footer-signature').innerHTML = t.footerSignature;
+
+      processText();
+      showToast(t.toastLang);
+    }
+
+    // -------------------------------------------------------------
+    // Text Cleaning Logic (Preamble, Postamble, Emojis, Markdown)
+    // -------------------------------------------------------------
+    function cleanPreambleAndPostamble(text) {
+      let cleaned = text.trim();
+      
+      // Multilingual AI Preamble intros (EN, FR, ES)
+      const preambles = [
+        /^(?:Certainement|Bien sûr|Absolument|Voici|Voici un|Voici une|Voici le|Voici la|Voici les|Avec plaisir)[^\n:]*[,!:]\s*(?:voici[^\n:]*)?\s*\n+/i,
+        /^(?:Here is|Here's|Sure|Certainly|Of course|I'd be happy to|Below is|Here are)[^\n:]*[,!:]\s*\n+/i,
+        /^(?:¡Por supuesto!|¡Claro!|Por supuesto|Claro que sí|Aquí tienes|Aquí está|Con gusto|A continuación)[^\n:]*[,!:]\s*\n+/i,
+        /^(?:En tant qu'IA|As an AI|Como inteligencia artificial)[^\n:]*[,!:]\s*\n+/i
+      ];
+      for (const p of preambles) {
+        cleaned = cleaned.replace(p, '');
+      }
+
+      // Multilingual AI sign-offs / outros
+      const postambles = [
+        /\n+(?:J'espère que (?:cela|ce document|cette synthèse|ce rapport|ce cours|ce devis) vous (?:aidera|plaît|convient|répond)[^\n]*|N'hésitez pas si vous avez[^\n]*|Faites-moi savoir si vous souhaitez[^\n]*|Bonne continuation[^\n]*)(?:\s*\n+[^\n]*)*$/i,
+        /\n+(?:Hope this helps[^\n]*|Let me know if you[^\n]*|Feel free to ask[^\n]*|I hope this document meets[^\n]*)(?:\s*\n+[^\n]*)*$/i,
+        /\n+(?:Espero que (?:este informe|este documento|esto) te (?:sirva|ayude|sea útil)[^\n]*|No dudes en preguntar[^\n]*|Dime si necesitas[^\n]*)(?:\s*\n+[^\n]*)*$/i
+      ];
+      for (const p of postambles) {
+        cleaned = cleaned.replace(p, '');
+      }
+
+      return cleaned.trim();
+    }
+
+    function removeEmojis(text) {
+      return text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+    }
+
+    function fixMarkdownArtifacts(text) {
+      let fixed = text;
+      // Fix excessive asterisks (****bold**** -> **bold**)
+      fixed = fixed.replace(/\*{3,}/g, '**');
+      // Fix headings without space (###Heading -> ### Heading)
+      fixed = fixed.replace(/^(#{1,6})([^\s#\n])/gm, '$1 $2');
+      // Normalize LaTeX brackets \[ \] -> $$ $$ and \( \) -> $ $
+      fixed = fixed.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
+      fixed = fixed.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
+      return fixed;
+    }
+
+    // -------------------------------------------------------------
+    // Humanize AI Text (Bypass AI Detection & Remove Clichés)
+    // -------------------------------------------------------------
+    function humanizeAIText(text) {
+      if (!text) return '';
+      let res = text;
+
+      // 1. Remove invisible watermarks and non-breaking spaces
+      // Unicode: \u200B (Zero-width space), \u200C (ZWNJ), \u200D (ZWJ), \uFEFF (BOM), \u00A0 (NBSP), \u202F (Narrow NBSP)
+      res = res.replace(/[\u200B\u200C\u200D\uFEFF]/g, '');
+      res = res.replace(/[\u00A0\u202F]/g, ' ');
+
+      // 2. Replace ChatGPT robotic long dashes (— and –) with normal hyphens or commas
+      res = res.replace(/\s*[—–]\s*/g, ' - ');
+      res = res.replace(/[—–]/g, '-');
+
+      // Helper for case-preserved replacement
+      const replaceCi = (input, pattern, repCap, repLow) => {
+        const regex = new RegExp(pattern, 'gi');
+        return input.replace(regex, (match) => {
+          const isCap = match[0] === match[0].toUpperCase() && match[0] !== match[0].toLowerCase();
+          return isCap ? repCap : repLow;
+        });
+      };
+
+      // 3. Multilingual AI Cliché Replacements (FR, EN, ES)
+      // --- Français ---
+      res = replaceCi(res, "il est important de noter que(?: l'on| qu')?", "Concrètement,", "concrètement,");
+      res = replaceCi(res, "il convient de souligner que(?: l'on| qu')?", "Notons que", "notons que");
+      res = replaceCi(res, "dans le monde actuel", "Aujourd'hui", "aujourd'hui");
+      res = replaceCi(res, "en conclusion,?", "Au final,", "au final,");
+      res = replaceCi(res, "en outre,?", "De plus,", "de plus,");
+      res = replaceCi(res, "un r[ôo]le crucial", "Un rôle clé", "un rôle clé");
+      res = replaceCi(res, "le r[ôo]le crucial", "Le rôle clé", "le rôle clé");
+      res = replaceCi(res, "des r[ôo]les cruciaux", "Des rôles clés", "des rôles clés");
+      res = replaceCi(res, "r[ôo]le crucial", "Rôle clé", "rôle clé");
+
+      // --- English ---
+      res = replaceCi(res, "delve into", "Explore", "explore");
+      res = replaceCi(res, "delving into", "Exploring", "exploring");
+      res = replaceCi(res, "delves into", "Explores", "explores");
+      res = replaceCi(res, "delved into", "Explored", "explored");
+      res = replaceCi(res, "furthermore,?", "Also,", "also,");
+      res = replaceCi(res, "moreover,?", "Besides,", "besides,");
+      res = replaceCi(res, "it is important to note that", "Notably,", "notably,");
+      res = replaceCi(res, "in conclusion,?", "Overall,", "overall,");
+      res = replaceCi(res, "plays a crucial role in", "Is key to", "is key to");
+      res = replaceCi(res, "plays a crucial role", "Is key", "is key");
+      res = replaceCi(res, "play a crucial role in", "Are key to", "are key to");
+      res = replaceCi(res, "play a crucial role", "Are key", "are key");
+      res = replaceCi(res, "testament to", "Proof of", "proof of");
+
+      // --- Español ---
+      res = replaceCi(res, "es importante destacar que", "En concreto,", "en concreto,");
+      res = replaceCi(res, "cabe destacar que", "Hay que notar que", "hay que notar que");
+      res = replaceCi(res, "en el mundo actual", "Hoy en día", "hoy en día");
+      res = replaceCi(res, "en conclusi[óo]n,?", "Al final,", "al final,");
+      res = replaceCi(res, "adem[áa]s,?", "También,", "también,");
+      res = replaceCi(res, "desempeña un papel crucial", "Es clave", "es clave");
+      res = replaceCi(res, "desempeñan un papel crucial", "Son clave", "son clave");
+      res = replaceCi(res, "papel crucial", "Papel clave", "papel clave");
+      res = replaceCi(res, "sumergirse en", "Explorar", "explorar");
+      res = replaceCi(res, "sumergirnos en", "Explorar", "explorar");
+
+      // Clean up accidental double punctuation (e.g. ", ," or ", .")
+      res = res.replace(/,\s*,/g, ',');
+      res = res.replace(/,\s*\./g, '.');
+
+      return res;
+    }
+
+    // -------------------------------------------------------------
+    // Markdown Parser & Styled HTML Generator
+    // -------------------------------------------------------------
+    function parseMarkdownToHtml(markdown, themeKey = 'blue') {
+      const theme = THEMES[themeKey] || THEMES.blue;
+      const lines = markdown.split(/\r?\n/);
+      let html = '';
+      let i = 0;
+
+      while (i < lines.length) {
+        let line = lines[i];
+
+        if (!line.trim()) {
+          i++;
+          continue;
+        }
+
+        // Heading 1
+        if (line.startsWith('# ')) {
+          const content = formatInline(line.slice(2).trim());
+          html += `<h1 style="color: ${theme.primary}; border-bottom: 2px solid ${theme.border}; padding-bottom: 8px; margin-top: 24px; margin-bottom: 12px; font-size: 22px; font-weight: 800; letter-spacing: -0.02em;">${content}</h1>`;
+          i++;
+          continue;
+        }
+
+        // Heading 2
+        if (line.startsWith('## ')) {
+          const content = formatInline(line.slice(3).trim());
+          html += `<h2 style="color: #0f172a; margin-top: 20px; margin-bottom: 10px; font-size: 17px; font-weight: 700;">${content}</h2>`;
+          i++;
+          continue;
+        }
+
+        // Heading 3
+        if (line.startsWith('### ')) {
+          const content = formatInline(line.slice(4).trim());
+          html += `<h3 style="color: #334155; margin-top: 16px; margin-bottom: 8px; font-size: 14px; font-weight: 700;">${content}</h3>`;
+          i++;
+          continue;
+        }
+
+        // Blockquote / Callout (> ...)
+        if (line.startsWith('>')) {
+          const quoteLines = [];
+          while (i < lines.length && lines[i].startsWith('>')) {
+            quoteLines.push(lines[i].replace(/^>\s?/, ''));
+            i++;
+          }
+          const content = formatInline(quoteLines.join(' '));
+          html += `<div style="background-color: ${theme.bgSubtle}; border-left: 4px solid ${theme.primary}; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; font-size: 13px; color: #1e293b; line-height: 1.6;">${content}</div>`;
+          continue;
+        }
+
+        // Table (| ... |)
+        if (line.startsWith('|') && line.endsWith('|')) {
+          const tableLines = [];
+          while (i < lines.length && lines[i].startsWith('|')) {
+            tableLines.push(lines[i]);
+            i++;
+          }
+          if (tableLines.length >= 2) {
+            html += renderTable(tableLines, theme);
+            continue;
+          }
+        }
+
+        // Lists (- or * or 1.)
+        if (/^(\s*)([-*+]|\d+\.)\s+/.test(line)) {
+          const isOrdered = /^\d+\./.test(line.trim());
+          const listTag = isOrdered ? 'ol' : 'ul';
+          const listStyle = isOrdered ? 'list-style-type: decimal;' : 'list-style-type: disc;';
+          let listItems = '';
+
+          while (i < lines.length && /^(\s*)([-*+]|\d+\.)\s+/.test(lines[i])) {
+            const itemText = lines[i].replace(/^(\s*)([-*+]|\d+\.)\s+/, '').trim();
+            listItems += `<li style="margin-bottom: 6px; padding-left: 4px;">${formatInline(itemText)}</li>`;
+            i++;
+          }
+
+          html += `<${listTag} style="${listStyle} margin: 12px 0 16px 24px; font-size: 13.5px; line-height: 1.6; color: #334155;">${listItems}</${listTag}>`;
+          continue;
+        }
+
+        // Math Block ($$ ... $$)
+        if (line.startsWith('$$')) {
+          let mathText = line.slice(2);
+          if (mathText.endsWith('$$') && mathText.length > 2) {
+            mathText = mathText.slice(0, -2);
+          } else {
+            i++;
+            while (i < lines.length && !lines[i].includes('$$')) {
+              mathText += ' ' + lines[i];
+              i++;
+            }
+            if (i < lines.length) {
+              mathText += ' ' + lines[i].replace('$$', '');
+            }
+          }
+          html += `<div class="math-box" style="background-color: ${theme.bgSubtle}; border: 1px solid ${theme.border}; padding: 12px 16px; border-radius: 8px; margin: 16px 0; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: ${theme.primary}; font-weight: 500;">${escapeHtml(mathText.trim())}</div>`;
+          i++;
+          continue;
+        }
+
+        // Normal paragraph
+        const pLines = [line];
+        i++;
+        while (
+          i < lines.length &&
+          lines[i].trim() &&
+          !lines[i].startsWith('#') &&
+          !lines[i].startsWith('>') &&
+          !lines[i].startsWith('|') &&
+          !lines[i].startsWith('$$') &&
+          !/^(\s*)([-*+]|\d+\.)\s+/.test(lines[i])
+        ) {
+          pLines.push(lines[i]);
+          i++;
+        }
+
+        const pContent = formatInline(pLines.join(' '));
+        html += `<p style="margin-bottom: 12px; font-size: 13.5px; line-height: 1.7; color: #334155;">${pContent}</p>`;
+      }
+
+      return html;
+    }
+
+    function renderTable(tableLines, theme) {
+      const parseRow = (str) =>
+        str
+          .replace(/^\|/, '')
+          .replace(/\|$/, '')
+          .split('|')
+          .map((c) => c.trim());
+
+      const headers = parseRow(tableLines[0]);
+      const dataRows = tableLines.slice(2).map(parseRow);
+
+      let tableHtml = `
+        <div style="overflow-x: auto; margin: 16px 0; border-radius: 8px; border: 1px solid #e2e8f0;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+            <thead>
+              <tr style="background-color: ${theme.primary}; color: #ffffff;">
+      `;
+
+      headers.forEach((h) => {
+        tableHtml += `<th style="padding: 10px 14px; font-weight: 700; border-bottom: 1px solid rgba(0,0,0,0.1);">${formatInline(h)}</th>`;
+      });
+
+      tableHtml += `</tr></thead><tbody>`;
+
+      dataRows.forEach((row, idx) => {
+        const bg = idx % 2 === 0 ? '#ffffff' : theme.bgSubtle;
+        tableHtml += `<tr style="background-color: ${bg}; transition: background 0.15s ease;">`;
+        row.forEach((cell) => {
+          tableHtml += `<td style="padding: 9px 14px; border-bottom: 1px solid #e2e8f0; color: #334155;">${formatInline(cell)}</td>`;
+        });
+        tableHtml += `</tr>`;
+      });
+
+      tableHtml += `</tbody></table></div>`;
+      return tableHtml;
+    }
+
+    function formatInline(text) {
+      if (!text) return '';
+      let formatted = escapeHtml(text);
+      // Bold (**text**)
+      formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight: 700; color: #0f172a;">$1</strong>');
+      // Italic (*text*)
+      formatted = formatted.replace(/\*([^*]+)\*/g, '<em style="font-style: italic;">$1</em>');
+      // Inline Code (`code`)
+      formatted = formatted.replace(/`([^`]+)`/g, '<code style="font-family: \'JetBrains Mono\', monospace; font-size: 12px; background-color: #f1f5f9; padding: 2px 5px; border-radius: 4px; color: #0f172a; border: 1px solid #e2e8f0;">$1</code>');
+      // Inline Math ($formula$)
+      formatted = formatted.replace(/\$([^$]+)\$/g, '<span style="font-family: \'JetBrains Mono\', monospace; font-size: 12px; color: #1e40af; background-color: #eff6ff; padding: 2px 4px; border-radius: 4px;">$1</span>');
+      return formatted;
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // -------------------------------------------------------------
+    // Live Process & Word Counter
+    // -------------------------------------------------------------
+    function processText() {
+      const textarea = document.getElementById('raw-ai-input');
+      let text = textarea.value;
+      const t = TRANSLATIONS[currentLang];
+
+      // Badges Update
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      const chars = text.length;
+      document.getElementById('badge-word-count').innerText = `${words} ${words === 1 ? t.wordUnit : t.wordsUnit}`;
+      document.getElementById('badge-char-count').innerText = `${chars} ${t.charsUnit}`;
+
+      // Apply Toggles
+      const humanize = document.getElementById('humanizeToggle')?.checked;
+      const cleanChatter = document.getElementById('toggle-clean-chatter').checked;
+      const fixMarkdown = document.getElementById('toggle-fix-markdown').checked;
+      const stripEmojis = document.getElementById('toggle-strip-emojis').checked;
+
+      let processed = text;
+      if (humanize) {
+        processed = humanizeAIText(processed);
+      }
+      if (cleanChatter) {
+        processed = cleanPreambleAndPostamble(processed);
+      }
+      if (fixMarkdown) {
+        processed = fixMarkdownArtifacts(processed);
+      }
+      if (stripEmojis) {
+        processed = removeEmojis(processed);
+      }
+
+      // Feature detector
+      const hasTables = text.includes('|') && text.includes('---');
+      const hasMath = text.includes('$');
+      let features = [];
+      if (humanize) features.push('Humanized');
+      if (hasTables) features.push(t.featuresTag.tables);
+      if (hasMath) features.push(t.featuresTag.math);
+      features.push(`${t.featuresTag.headings} & ${t.featuresTag.lists}`);
+      
+      const detectedEl = document.getElementById('detected-features');
+      if (!text.trim()) {
+        detectedEl.innerText = t.detectedWaiting;
+      } else {
+        detectedEl.innerText = `${features.join(' · ')} ${t.detectedSuffix}`;
+      }
+
+      // Render to Sheet
+      const renderedHtml = parseMarkdownToHtml(processed, currentThemeKey);
+      const sheetBody = document.getElementById('document-rendered-body');
+      
+      if (!processed.trim()) {
+        sheetBody.innerHTML = `
+          <div class="py-20 text-center text-slate-400">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-purple-50 text-purple-400 flex items-center justify-center text-xl">📄</div>
+            <p class="font-bold text-sm text-slate-600">${t.emptySheetTitle || 'No content to preview'}</p>
+            <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">${t.emptySheetDesc || 'Paste your raw AI response on the left to see the live document.'}</p>
+          </div>
+        `;
+      } else {
+        sheetBody.innerHTML = renderedHtml;
+      }
+    }
+
+    // Theme Switcher
+    function changeDocumentTheme(themeKey) {
+      currentThemeKey = themeKey;
+      processText();
+      const t = TRANSLATIONS[currentLang];
+      showToast(`${t.toastTheme} « ${t.styles[themeKey]} »`);
+    }
+
+    // Zoom Controller
+    function setZoom(scale) {
+      const sheet = document.getElementById('a4-page-sheet');
+      sheet.style.transform = `scale(${scale})`;
+      sheet.style.transformOrigin = 'top center';
+    }
+
+    // Preset Loaders
+    function loadExamplePreset(type) {
+      const textarea = document.getElementById('raw-ai-input');
+      const langSamples = SAMPLES[currentLang] || SAMPLES.en;
+      if (langSamples[type]) {
+        textarea.value = langSamples[type];
+        processText();
+      }
+    }
+
+    async function pasteFromClipboard() {
+      const t = TRANSLATIONS[currentLang];
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text) {
+          document.getElementById('raw-ai-input').value = text;
+          processText();
+          showToast(t.toastPaste);
+        }
+      } catch (err) {
+        showToast(t.toastPaste);
+      }
+    }
+
+    function clearText() {
+      document.getElementById('raw-ai-input').value = '';
+      processText();
+      const t = TRANSLATIONS[currentLang];
+      showToast(t.toastClear);
+    }
+
+    // -------------------------------------------------------------
+    // DOCUMENT TITLE & SANITIZER
+    // -------------------------------------------------------------
+    function getDocumentTitle() {
+      const rawText = document.getElementById('raw-ai-input').value;
+      const lines = rawText.split(/\r?\n/);
+      for (let line of lines) {
+        line = line.trim();
+        if (line.startsWith('# ')) {
+          return sanitizeFilename(line.replace(/^#\s+/, ''));
+        }
+        if (line.startsWith('## ')) {
+          return sanitizeFilename(line.replace(/^##\s+/, ''));
+        }
+      }
+      for (let line of lines) {
+        line = line.trim();
+        if (line && !line.startsWith('|') && !line.startsWith('>') && !line.startsWith('-') && !line.startsWith('*') && !line.startsWith('$$')) {
+          return sanitizeFilename(line.slice(0, 40));
+        }
+      }
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      return t.defaultDocFilename || 'ChatToDoc_Document';
+    }
+
+    function sanitizeFilename(name) {
+      return name
+        .replace(/[\\/:*?"<>|#]/g, '')
+        .trim()
+        .replace(/\s+/g, '_')
+        .slice(0, 50) || 'ChatToDoc_Document';
+    }
+
+    // -------------------------------------------------------------
+    // EXPORT FUNCTIONS & WORD XML GENERATOR
+    // -------------------------------------------------------------
+    function generateWordDocumentHtml(markdown, themeKey) {
+      const theme = THEMES[themeKey] || THEMES.blue;
+      const lines = markdown.split(/\r?\n/);
+      let bodyHtml = '';
+      let i = 0;
+
+      while (i < lines.length) {
+        let line = lines[i];
+        if (!line.trim()) {
+          i++;
+          continue;
+        }
+
+        // Heading 1
+        if (line.startsWith('# ')) {
+          const text = formatWordInline(line.slice(2).trim());
+          bodyHtml += `<h1 style="font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 20pt; font-weight: bold; color: ${theme.primary}; border-bottom: 2pt solid ${theme.primary}; padding-bottom: 6pt; margin-top: 18pt; margin-bottom: 10pt;">${text}</h1>`;
+          i++;
+          continue;
+        }
+
+        // Heading 2
+        if (line.startsWith('## ')) {
+          const text = formatWordInline(line.slice(3).trim());
+          bodyHtml += `<h2 style="font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 15pt; font-weight: bold; color: #0f172a; margin-top: 14pt; margin-bottom: 6pt;">${text}</h2>`;
+          i++;
+          continue;
+        }
+
+        // Heading 3
+        if (line.startsWith('### ')) {
+          const text = formatWordInline(line.slice(4).trim());
+          bodyHtml += `<h3 style="font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 12.5pt; font-weight: bold; color: #334155; margin-top: 10pt; margin-bottom: 4pt;">${text}</h3>`;
+          i++;
+          continue;
+        }
+
+        // Blockquote
+        if (line.startsWith('>')) {
+          const quoteLines = [];
+          while (i < lines.length && lines[i].startsWith('>')) {
+            quoteLines.push(lines[i].replace(/^>\s?/, ''));
+            i++;
+          }
+          const text = formatWordInline(quoteLines.join(' '));
+          bodyHtml += `<div style="border-left: 3.5pt solid ${theme.primary}; background-color: #f8fafc; padding: 8pt 12pt; margin: 10pt 0; font-family: 'Calibri', Arial, sans-serif; font-size: 10.5pt; font-style: italic; color: #334155;">${text}</div>`;
+          continue;
+        }
+
+        // Table
+        if (line.startsWith('|') && line.endsWith('|')) {
+          const tableLines = [];
+          while (i < lines.length && lines[i].startsWith('|')) {
+            tableLines.push(lines[i]);
+            i++;
+          }
+          if (tableLines.length >= 2) {
+            bodyHtml += renderWordTable(tableLines, theme);
+            continue;
+          }
+        }
+
+        // Lists
+        if (/^(\s*)([-*+]|\d+\.)\s+/.test(line)) {
+          const isOrdered = /^\d+\./.test(line.trim());
+          const listTag = isOrdered ? 'ol' : 'ul';
+          let listItems = '';
+
+          while (i < lines.length && /^(\s*)([-*+]|\d+\.)\s+/.test(lines[i])) {
+            const itemText = lines[i].replace(/^(\s*)([-*+]|\d+\.)\s+/, '').trim();
+            listItems += `<li style="font-family: 'Calibri', Arial, sans-serif; font-size: 11pt; line-height: 1.45; color: #334155; margin-bottom: 4pt;">${formatWordInline(itemText)}</li>`;
+            i++;
+          }
+
+          bodyHtml += `<${listTag} style="margin-top: 4pt; margin-bottom: 10pt; padding-left: 22pt;">${listItems}</${listTag}>`;
+          continue;
+        }
+
+        // Math block
+        if (line.startsWith('$$')) {
+          let mathText = line.slice(2);
+          if (mathText.endsWith('$$') && mathText.length > 2) {
+            mathText = mathText.slice(0, -2);
+          } else {
+            i++;
+            while (i < lines.length && !lines[i].includes('$$')) {
+              mathText += ' ' + lines[i];
+              i++;
+            }
+            if (i < lines.length) {
+              mathText += ' ' + lines[i].replace('$$', '');
+            }
+          }
+          bodyHtml += `<div style="font-family: 'Cambria Math', Georgia, serif; font-size: 11.5pt; font-style: italic; background-color: #f8fafc; border: 1pt solid #cbd5e1; padding: 8pt 12pt; text-align: center; color: ${theme.primary}; margin: 10pt 0;">${escapeHtml(mathText.trim())}</div>`;
+          i++;
+          continue;
+        }
+
+        // Regular paragraph
+        const pLines = [line];
+        i++;
+        while (
+          i < lines.length &&
+          lines[i].trim() &&
+          !lines[i].startsWith('#') &&
+          !lines[i].startsWith('>') &&
+          !lines[i].startsWith('|') &&
+          !lines[i].startsWith('$$') &&
+          !/^(\s*)([-*+]|\d+\.)\s+/.test(lines[i])
+        ) {
+          pLines.push(lines[i]);
+          i++;
+        }
+        const pText = formatWordInline(pLines.join(' '));
+        bodyHtml += `<p style="font-family: 'Calibri', 'Segoe UI', Arial, sans-serif; font-size: 11pt; line-height: 1.45; color: #334155; margin-top: 0; margin-bottom: 8pt; text-align: left;">${pText}</p>`;
+      }
+
+      return bodyHtml;
+    }
+
+    function renderWordTable(tableLines, theme) {
+      const parseRow = (str) =>
+        str
+          .replace(/^\|/, '')
+          .replace(/\|$/, '')
+          .split('|')
+          .map((c) => c.trim());
+
+      const headers = parseRow(tableLines[0]);
+      const dataRows = tableLines.slice(2).map(parseRow);
+
+      let tHtml = `<table border="1" cellspacing="0" cellpadding="8" style="width: 100%; border-collapse: collapse; margin: 12pt 0; font-family: 'Calibri', Arial, sans-serif; border: 1pt solid #cbd5e1;">`;
+
+      // Header row
+      tHtml += `<thead><tr style="background-color: ${theme.primary}; color: #ffffff;">`;
+      headers.forEach((h) => {
+        tHtml += `<th style="background-color: ${theme.primary}; color: #ffffff; font-family: 'Calibri', Arial, sans-serif; font-size: 10.5pt; font-weight: bold; padding: 8pt 10pt; border: 1pt solid ${theme.primary}; text-align: left;">${formatWordInline(h)}</th>`;
+      });
+      tHtml += `</tr></thead><tbody>`;
+
+      // Data rows
+      dataRows.forEach((row, idx) => {
+        const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+        tHtml += `<tr style="background-color: ${bg};">`;
+        row.forEach((cell) => {
+          tHtml += `<td style="font-family: 'Calibri', Arial, sans-serif; font-size: 10pt; padding: 6pt 10pt; border: 1pt solid #cbd5e1; color: #334155;">${formatWordInline(cell)}</td>`;
+        });
+        tHtml += `</tr>`;
+      });
+
+      tHtml += `</tbody></table>`;
+      return tHtml;
+    }
+
+    function formatWordInline(text) {
+      if (!text) return '';
+      let formatted = escapeHtml(text);
+      formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight: bold; color: #0f172a;">$1</strong>');
+      formatted = formatted.replace(/\*([^*]+)\*/g, '<em style="font-style: italic;">$1</em>');
+      formatted = formatted.replace(/`([^`]+)`/g, '<code style="font-family: \'Consolas\', monospace; font-size: 9.5pt; background-color: #f1f5f9; padding: 2pt 4pt; border: 1pt solid #e2e8f0; color: #0f172a;">$1</code>');
+      formatted = formatted.replace(/\$([^$]+)\$/g, '<span style="font-family: \'Cambria Math\', serif; font-style: italic; color: #1e3a8a; background-color: #f0f5ff; padding: 1pt 3pt;">$1</span>');
+      return formatted;
+    }
+
+    // 1. Export Word (.doc)
+    function exportWordDoc() {
+      processText();
+
+      const rawInput = document.getElementById('raw-ai-input').value;
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      if (!rawInput.trim()) {
+        showToast(t.toastClear || 'Please paste or write some text first');
+        return;
+      }
+
+      // Apply active cleaning toggles
+      const humanize = document.getElementById('humanizeToggle')?.checked;
+      const cleanChatter = document.getElementById('toggle-clean-chatter').checked;
+      const fixMarkdown = document.getElementById('toggle-fix-markdown').checked;
+      const stripEmojis = document.getElementById('toggle-strip-emojis').checked;
+
+      let processed = rawInput;
+      if (humanize) processed = humanizeAIText(processed);
+      if (cleanChatter) processed = cleanPreambleAndPostamble(processed);
+      if (fixMarkdown) processed = fixMarkdownArtifacts(processed);
+      if (stripEmojis) processed = removeEmojis(processed);
+
+      const theme = THEMES[currentThemeKey] || THEMES.blue;
+      const docTitle = getDocumentTitle();
+
+      const bodyHtml = generateWordDocumentHtml(processed, currentThemeKey);
+
+      const wordDocContent = `
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>${docTitle}</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    @page Section1 {
+      size: 595.3pt 841.9pt;
+      margin: 2.0cm 2.0cm 2.0cm 2.0cm;
+      mso-header-margin: 1.0cm;
+      mso-footer-margin: 1.0cm;
+      mso-paper-source: 0;
+    }
+    div.Section1 {
+      page: Section1;
+    }
+    body {
+      font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+      color: #1e293b;
+      background: #ffffff;
+    }
+    p {
+      font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+      color: #334155;
+      margin-top: 0;
+      margin-bottom: 8pt;
+      text-align: left;
+    }
+    h1 {
+      font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+      font-size: 20pt;
+      font-weight: bold;
+      color: ${theme.primary};
+      border-bottom: 2pt solid ${theme.primary};
+      padding-bottom: 5pt;
+      margin-top: 18pt;
+      margin-bottom: 10pt;
+    }
+    h2 {
+      font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+      font-size: 15pt;
+      font-weight: bold;
+      color: #0f172a;
+      margin-top: 14pt;
+      margin-bottom: 6pt;
+    }
+    h3 {
+      font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+      font-size: 12.5pt;
+      font-weight: bold;
+      color: #334155;
+      margin-top: 10pt;
+      margin-bottom: 4pt;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 12pt 0;
+      font-family: 'Calibri', Arial, sans-serif;
+      font-size: 10pt;
+      border: 1pt solid #cbd5e1;
+    }
+    th {
+      background-color: ${theme.primary};
+      color: #ffffff;
+      font-weight: bold;
+      padding: 8pt 10pt;
+      border: 1pt solid ${theme.primary};
+      text-align: left;
+      font-size: 10.5pt;
+    }
+    td {
+      padding: 6pt 10pt;
+      border: 1pt solid #cbd5e1;
+      color: #334155;
+      font-size: 10pt;
+    }
+    ul, ol {
+      margin-top: 4pt;
+      margin-bottom: 10pt;
+      padding-left: 22pt;
+    }
+    li {
+      font-family: 'Calibri', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.45;
+      color: #334155;
+      margin-bottom: 4pt;
+    }
+    .doc-footer {
+      border-top: 1pt solid #cbd5e1;
+      margin-top: 24pt;
+      padding-top: 8pt;
+      font-size: 9pt;
+      color: #94a3b8;
+      font-family: 'Calibri', Arial, sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div class="Section1">
+    ${bodyHtml}
+    <div class="doc-footer">
+      ${t.sheetFooterMention || 'Document formatted with ChatToDoc'}
+    </div>
+  </div>
+</body>
+</html>
+      `.trim();
+
+      const blob = new Blob(['\ufeff', wordDocContent], { type: 'application/msword;charset=utf-8' });
+      downloadBlob(blob, `${docTitle}.doc`);
+      showToast(t.toastWord);
+    }
+
+    // 2. Export PDF via Window Print
+    function exportPdf() {
+      processText();
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      showToast(t.toastPdf);
+
+      const originalTitle = document.title;
+      const docTitle = getDocumentTitle();
+      document.title = docTitle;
+
+      const sheet = document.getElementById('a4-page-sheet');
+      const prevTransform = sheet ? sheet.style.transform : '';
+      if (sheet) sheet.style.transform = 'none';
+
+      setTimeout(() => {
+        window.print();
+        setTimeout(() => {
+          document.title = originalTitle;
+          if (sheet && prevTransform) sheet.style.transform = prevTransform;
+        }, 1200);
+      }, 150);
+    }
+
+    // 3. Export Excel (.xls)
+    function exportExcelSheet() {
+      processText();
+      const rawText = document.getElementById('raw-ai-input').value;
+      const theme = THEMES[currentThemeKey];
+      const t = TRANSLATIONS[currentLang];
+      const docTitle = getDocumentTitle();
+
+      let textToExport = rawText;
+      if (document.getElementById('humanizeToggle')?.checked) {
+        textToExport = humanizeAIText(textToExport);
+      }
+      const lines = textToExport.split(/\r?\n/);
+      let tableRows = [];
+      let inTable = false;
+
+      for (let line of lines) {
+        line = line.trim();
+        if (line.startsWith('|') && line.endsWith('|')) {
+          inTable = true;
+          let cols = line.split('|').slice(1, -1).map(c => c.trim());
+          if (!cols[0].match(/^-+$/)) {
+            tableRows.push(cols);
+          }
+        } else if (inTable) {
+          break;
+        }
+      }
+
+      if (tableRows.length === 0) {
+        showToast(t.toastNoTable);
+        return;
+      }
+
+      let excelHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>${docTitle}</title>
+  <style>
+    th { background-color: ${theme.primary}; color: #ffffff; font-weight: bold; border: 0.5pt solid #cccccc; font-family: Calibri, sans-serif; font-size: 11pt; padding: 6pt; }
+    td { border: 0.5pt solid #cccccc; font-family: Calibri, sans-serif; font-size: 10.5pt; padding: 5pt; }
+  </style>
+</head>
+<body>
+  <table>
+    <thead><tr>`;
+
+      tableRows[0].forEach(h => {
+        excelHtml += `<th>${escapeHtml(h)}</th>`;
+      });
+      excelHtml += `</tr></thead><tbody>`;
+
+      tableRows.slice(1).forEach(row => {
+        excelHtml += `<tr>`;
+        row.forEach(cell => {
+          excelHtml += `<td>${escapeHtml(cell)}</td>`;
+        });
+        excelHtml += `</tr>`;
+      });
+
+      excelHtml += `</tbody></table></body></html>`;
+
+      const blob = new Blob(['\ufeff', excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+      downloadBlob(blob, `${docTitle}.xls`);
+      showToast(t.toastExcel);
+    }
+
+    // 4. Copier pour Gmail / Docs
+    async function copyRichFormattedText() {
+      processText();
+      const t = TRANSLATIONS[currentLang];
+      const sheetBody = document.getElementById('document-rendered-body');
+
+      if (!sheetBody || !sheetBody.innerHTML.trim()) {
+        showToast(t.toastClear || 'Please paste or write some text first');
+        return;
+      }
+
+      const htmlContent = `
+        <div style="font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 11pt; color: #1e293b; line-height: 1.6;">
+          ${sheetBody.innerHTML}
+        </div>
+      `;
+
+      try {
+        const textBlob = new Blob([document.getElementById('raw-ai-input').value], { type: 'text/plain' });
+        const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+
+        const clipboardItem = new ClipboardItem({
+          'text/plain': textBlob,
+          'text/html': htmlBlob,
+        });
+
+        await navigator.clipboard.write([clipboardItem]);
+        showToast(t.toastCopy);
+      } catch (err) {
+        // Fallback for older browsers
+        const tempEl = document.createElement('div');
+        tempEl.innerHTML = htmlContent;
+        tempEl.style.position = 'fixed';
+        tempEl.style.left = '-9999px';
+        document.body.appendChild(tempEl);
+
+        const range = document.createRange();
+        range.selectNodeContents(tempEl);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        document.execCommand('copy');
+        document.body.removeChild(tempEl);
+        showToast(t.toastCopy);
+      }
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Toast Controller
+    let toastTimer = null;
+    function showToast(message, icon = '🎉') {
+      const toast = document.getElementById('toast-notification');
+      const msgEl = document.getElementById('toast-message');
+      const iconEl = document.getElementById('toast-icon');
+
+      msgEl.innerText = message;
+      iconEl.innerText = icon;
+
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
+    }
+
+    // Dark Mode Toggle
+    function updateThemeToggleUI() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const icon = document.getElementById('theme-toggle-icon');
+      const text = document.getElementById('theme-toggle-text');
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      if (icon) icon.innerText = isDark ? '☀️' : '🌙';
+      if (text) text.innerText = isDark ? t.themeLight : t.themeDark;
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      try {
+        localStorage.setItem('chattodoc-theme', isDark ? 'dark' : 'light');
+      } catch (e) {}
+      updateThemeToggleUI();
+      const t = TRANSLATIONS[currentLang] || TRANSLATIONS.en;
+      showToast(isDark ? t.toastDark : t.toastLight);
+    }
+
+    // FAQ Accordion Toggle
+    function toggleFaq(button) {
+      const content = button.nextElementSibling;
+      const icon = button.querySelector('.faq-icon');
+      const isHidden = content.classList.contains('hidden');
+
+      document.querySelectorAll('.faq-content').forEach(c => c.classList.add('hidden'));
+      document.querySelectorAll('.faq-icon').forEach(i => i.innerText = '+');
+
+      if (isHidden) {
+        content.classList.remove('hidden');
+        icon.innerText = '−';
+      }
+    }
+
+    // Initialize on page load in chosen or default English language
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedLang = localStorage.getItem('chattodoc-lang') || 'en';
+      setLanguage(savedLang);
+    });
+  </script>
+</body>
+</html>
